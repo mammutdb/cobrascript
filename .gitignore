@@ -1,0 +1,11 @@
+*.py[c|o]
+*.sql
+*.bz2
+*~
+*.log
+*.json
+*.wsgi
+*.egg-info
+build*
+dist*
+*.swp
