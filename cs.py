@@ -127,11 +127,12 @@ class Module(Node):
 
 class Expr(Node):
     def compile(self, compiler):
+        return [compiler.indent_str_expr(" ".join(self.data)), ";"]
+
+
+class BinOp(Node):
+    def compile(self, compiler):
         return [" ".join(self.data)]
-
-
-class BinOp(Expr):
-    pass
 
 
 class Num(Node):
