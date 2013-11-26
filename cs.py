@@ -118,6 +118,6 @@ def main(filename):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        raise RuntimeException("Invalid parameters")
+        raise RuntimeError("Invalid parameters")
 
     sys.exit(main(sys.argv[1]))
