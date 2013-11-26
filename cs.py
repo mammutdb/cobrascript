@@ -62,6 +62,21 @@ class Add(Node):
         return "+"
 
 
+class Sub(Node):
+    def get_code(self, indent=0):
+        return "-"
+
+
+class Mult(Node):
+    def get_code(self, indent=0):
+        return "*"
+
+
+class Div(Node):
+    def get_code(self, indent=0):
+        return "/"
+
+
 class BinOp(Node):
     def get_code(self, indent=0):
         left = _resolve_node_instance(self.ast_node.left)
@@ -95,25 +110,19 @@ class FunctionDef(Node):
         code.append("};\n")
         return "".join(code)
 
+def compile_node(node):
+    print(ast.dump(node))
+    print("*"*200)
+    return _resolve_node_instance(node).get_code()
 
-class Compiller(object):
-    def __init__(self, tree):
-        self.tree = tree
-
-    def compile(self):
-        module = Module(self.tree)
-        return module.get_code()
-
+def compile(string):
+    tree = ast.parse(string)
+    return compile_node(tree)
 
 def main(filename):
     with io.open(filename, "rt") as f:
-        tree = ast.parse(f.read())
-
-    print(ast.dump(tree))
-    print("*"*200)
-
-    cmp = Compiller(tree)
-    r = cmp.compile()
+        text = f.read()
+    r = compile(text)
     print(r)
 
 if __name__ == "__main__":
