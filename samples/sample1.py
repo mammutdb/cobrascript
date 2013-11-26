@@ -2,4 +2,4 @@
 
 
 def fobar():
-    return 2 + 2
+    return (2 + 2) + 3
