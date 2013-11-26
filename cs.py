@@ -43,7 +43,7 @@ class Node(metaclass=NodeMeta):
 class Module(Node):
     def get_code(self, indent=0):
         code = "\n\n".join(n.get_code(indent=indent+4) for n in self.iter_nodes())
-        return "".join([";function(this) {\n", code, "}.call(this);"])
+        return "".join([";(function() {\n", code, "}).call(this);"])
 
 
 class Expr(Node):
@@ -111,8 +111,6 @@ class FunctionDef(Node):
         return "".join(code)
 
 def compile_node(node):
-    print(ast.dump(node))
-    print("*"*200)
     return _resolve_node_instance(node).get_code()
 
 def compile(string):
