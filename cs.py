@@ -17,14 +17,14 @@ class Stack(object):
         self._data = []
 
     def get_last(self):
-        if len(self._data) == 0:
-            raise ValueError("Stack is empty")
+        if self.is_empty():
+            return None
         return self._data[-1]
 
     def push(self, item):
         self._data.append(item)
 
-    def drop_last(self):
+    def pop(self):
         if len(self._data) == 0:
             raise ValueError("Stack is empty")
 
@@ -33,7 +33,11 @@ class Stack(object):
         finally:
             self._data = self._data[:-1]
 
-class CobraNode(object):
+    def is_empty(self):
+        return len(self._data) == 0
+
+
+class NodeWrapper(object):
     def __init__(self):
         self.node = None
 
@@ -47,7 +51,7 @@ class CompilerVisitor(ast.NodeVisitor):
 
         self.parent_stack = Stack()
 
-        self._scoped_parents = []
+        self._scoped_parents = Stack()
         self._scoped_childs = defaultdict(lambda: [])
         self._scoped_level = 0
 
@@ -59,19 +63,19 @@ class CompilerVisitor(ast.NodeVisitor):
     def scoped_childs(self):
         return self._scoped_childs[self._scoped_level]
 
-    @property
-    def scoped_last_parent(self):
-        if len(self._scoped_parents) == 0:
-            return None
-        return self._scoped_parents[-1]
+    # @property
+    # def scoped_last_parent(self):
+    #     if len(self._scoped_parents) == 0:
+    #         return None
+    #     return self._scoped_parents[-1]
 
-    @scoped_last_parent.setter
-    def scoped_last_parent(self, value):
-        self._scoped_parents.append(value)
+    # @scoped_last_parent.setter
+    # def scoped_last_parent(self, value):
+    #     self._scoped_parents.append(value)
 
-    @scoped_last_parent.deleter
-    def scoped_last_parent(self):
-        self._scoped_parents = self._scoped_parents[:-1]
+    # @scoped_last_parent.deleter
+    # def scoped_last_parent(self):
+    #     self._scoped_parents = self._scoped_parents[:-1]
 
     def increment_scope_level(self):
         self._scoped_level += 1
@@ -85,28 +89,27 @@ class CompilerVisitor(ast.NodeVisitor):
     def visit(self, node, root=False):
         # print("enter:", node)
 
-        jsnode = CobraNode()
+        node_wrapper = NodeWrapper()
 
-        self.scoped_last_parent = jsnode
-        self.scoped_childs.append(jsnode)
+        # self.scoped_parents.push(node_wrapper)
+
+        self.scoped_childs.append(node_wrapper)
         self.increment_scope_level()
 
         super().visit(node)
 
-        name = node.__class__.__name__
-        current = self.scoped_last_parent
-        current.node = self._compile_node(node, self.scoped_childs)
+        # self.scoped_parents.pop()
+        node_wrapper.node = self._compile_node(node, self.scoped_childs)
 
         # print("exit:", node, current)
         # print("childs:", self.scoped_childs)
         # print()
 
-        del self.scoped_last_parent
-
-        if self.scoped_last_parent is None:
-            self.result = current
-
         self.decrement_scope_level()
+
+        if self._scoped_level == 0:
+            self.result = node_wrapper
+
 
     def _compile_node(self, node, childs):
         name = node.__class__.__name__
