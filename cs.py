@@ -12,7 +12,7 @@ from collections import defaultdict
 import slimit.ast as slim_ast
 
 
-class Stack(object):
+class GenericStack(object):
     def __init__(self):
         self._data = []
 
@@ -37,6 +37,28 @@ class Stack(object):
         return len(self._data) == 0
 
 
+class LeveledStack(object):
+    def __init__(self):
+        self.data = defaultdict(lambda: [])
+        self.level = 0
+
+    def inc_level(self):
+        self.level += 1
+
+    def dec_level(self):
+        del self.data[self.level]
+        self.level -= 1
+
+        if self.level < 0:
+            raise RuntimeError("invalid stack level")
+
+    def append(self, value):
+        self.data[self.level].append(value)
+
+    def get_value(self):
+        return self.data[self.level]
+
+
 class NodeWrapper(object):
     def __init__(self):
         self.node = None
@@ -49,67 +71,54 @@ class CompilerVisitor(ast.NodeVisitor):
     def __init__(self):
         super().__init__()
 
-        self.parent_stack = Stack()
+        self.parents_stack = GenericStack()
+        self.level_stack = LeveledStack()
+        self.bin_op_stack = GenericStack()
 
-        self._scoped_parents = Stack()
-        self._scoped_childs = defaultdict(lambda: [])
-        self._scoped_level = 0
+        self.indentation = 0
+        self.debug = True
+
+    def print(self, *args, **kwargs):
+        if self.debug:
+            prefix = "    " * self.indentation
+            print(prefix, *args, **kwargs)
 
     def compile_ast(self, ast_tree):
         self.visit(ast_tree, root=True)
         return self.result.node.to_ecma()
 
-    @property
-    def scoped_childs(self):
-        return self._scoped_childs[self._scoped_level]
-
-    # @property
-    # def scoped_last_parent(self):
-    #     if len(self._scoped_parents) == 0:
-    #         return None
-    #     return self._scoped_parents[-1]
-
-    # @scoped_last_parent.setter
-    # def scoped_last_parent(self, value):
-    #     self._scoped_parents.append(value)
-
-    # @scoped_last_parent.deleter
-    # def scoped_last_parent(self):
-    #     self._scoped_parents = self._scoped_parents[:-1]
-
-    def increment_scope_level(self):
-        self._scoped_level += 1
-
-    def decrement_scope_level(self):
-        self._scoped_level -= 1
-
-        if self._scoped_level < 0:
-            raise RuntimeError("invalid scope level")
-
     def visit(self, node, root=False):
-        # print("enter:", node)
-
         node_wrapper = NodeWrapper()
 
-        # self.scoped_parents.push(node_wrapper)
+        self.parents_stack.push(node_wrapper)
+        self.level_stack.append(node_wrapper)
+        self.level_stack.inc_level()
 
-        self.scoped_childs.append(node_wrapper)
-        self.increment_scope_level()
+        self.print("enter:", node)
 
+        self.indentation += 1
         super().visit(node)
+        self.indentation -= 1
 
-        # self.scoped_parents.pop()
-        node_wrapper.node = self._compile_node(node, self.scoped_childs)
+        # import pdb; pdb.set_trace()
 
-        # print("exit:", node, current)
-        # print("childs:", self.scoped_childs)
-        # print()
+        node_wrapper = self.parents_stack.pop()
+        node_wrapper.node = self._compile_node(node, self.level_stack.get_value())
 
-        self.decrement_scope_level()
+        self.print("childs:", self.level_stack.get_value())
+        self.print("exit:", node)
 
-        if self._scoped_level == 0:
+        self.level_stack.dec_level()
+
+        if self.parents_stack.is_empty():
             self.result = node_wrapper
 
+    def visit_BinOp(self, node):
+        self.bin_op_stack.push(node)
+        # print("VISIT1", node)
+        self.generic_visit(node)
+        # print("VISIT2", node)
+        self.bin_op_stack.pop()
 
     def _compile_node(self, node, childs):
         name = node.__class__.__name__
@@ -123,8 +132,7 @@ class CompilerVisitor(ast.NodeVisitor):
                            childs[0].node,
                            childs[2].node)
 
-        # Ugly hack
-        if "BinOp" not in [x.node.__class__.__name__ for x in childs]:
+        if not self.bin_op_stack.is_empty():
             n._parens = True
 
         return n
