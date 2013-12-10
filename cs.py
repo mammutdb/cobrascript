@@ -167,6 +167,24 @@ class CompilerVisitor(ast.NodeVisitor):
     def _compile_arg(self, node, childs):
         return slim_ast.Identifier(node.arg)
 
+    def _compile_Str(self, node, childs):
+        return node.s
+
+    def _compile_Dict(self, node, childs):
+        properties = []
+
+        msize = int(len(childs)/2)
+
+        keys = [x.node for x in childs[:msize]]
+        values = [x.node for x in childs[msize:]]
+
+        for key, value in zip(keys, values):
+            identifier = slim_ast.Identifier(key)
+            assign_instance = slim_ast.Assign(":", identifier, value)
+            properties.append(assign_instance)
+
+        return slim_ast.Object(properties)
+
 def compile(string):
     tree = ast.parse(string)
 
