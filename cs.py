@@ -7,20 +7,9 @@ import io
 import sys
 import pprint
 
-# TODO: introduce argparse for commandline
+from collections import defaultdict
 
-# Global class registry
-
-nodes = {}
-
-def _resolve_node_instance(node, indent=0):
-    cls = nodes[node.__class__.__name__]
-    return cls(node, indent=indent)
-
-class NodeMeta(type):
-    def __init__(cls, name, bases, attrs):
-        nodes[name] = cls
-        super().__init__(name, bases, attrs)
+import slimit.ast as slim_ast
 
 
 class Stack(object):
@@ -44,147 +33,115 @@ class Stack(object):
         finally:
             self._data = self._data[:-1]
 
+class CobraNode(object):
+    def __init__(self):
+        self.node = None
+
+    def __repr__(self):
+        return "<wrapper {}>".format(repr(self.node))
+
 
 class CompilerVisitor(ast.NodeVisitor):
     def __init__(self):
         super().__init__()
 
-        self.scope_stack = Stack()
         self.parent_stack = Stack()
-        self.indent_level = 0
-        self.indent_chars = 2
 
-    def indent_str_expr(self, data, modifier=0):
-        ic = " " * self.indent_chars
-        return (ic * (self.indent_level+modifier)) + data
-
-    def get_cs_node(self, node):
-        cls = nodes[node.__class__.__name__]
-        return cls(node)
+        self._scoped_parents = []
+        self._scoped_childs = defaultdict(lambda: [])
+        self._scoped_level = 0
 
     def compile_ast(self, ast_tree):
         self.visit(ast_tree, root=True)
-        return self.compiled_data
+        return self.result.node.to_ecma()
+
+    @property
+    def scoped_childs(self):
+        return self._scoped_childs[self._scoped_level]
+
+    @property
+    def scoped_last_parent(self):
+        if len(self._scoped_parents) == 0:
+            return None
+        return self._scoped_parents[-1]
+
+    @scoped_last_parent.setter
+    def scoped_last_parent(self, value):
+        self._scoped_parents.append(value)
+
+    @scoped_last_parent.deleter
+    def scoped_last_parent(self):
+        self._scoped_parents = self._scoped_parents[:-1]
+
+    def increment_scope_level(self):
+        self._scoped_level += 1
+
+    def decrement_scope_level(self):
+        self._scoped_level -= 1
+
+        if self._scoped_level < 0:
+            raise RuntimeError("invalid scope level")
 
     def visit(self, node, root=False):
-        # Get cs Node instance for abs node.
-        nd = self.get_cs_node(node)
-        print("enter:", node, nd)
+        # print("enter:", node)
 
-        # If node implements a new scope, set it
-        if nd.new_scope:
-            self.indent_level += 1
-            self.scope_stack.push(nd)
+        jsnode = CobraNode()
 
-        # Set parent scope before proces childs
-        self.parent_stack.push(nd)
+        self.scoped_last_parent = jsnode
+        self.scoped_childs.append(jsnode)
+        self.increment_scope_level()
 
         super().visit(node)
 
-        self.parent_stack.drop_last()
+        name = node.__class__.__name__
+        current = self.scoped_last_parent
+        current.node = self._compile_node(node, self.scoped_childs)
 
-        if not root:
-            print(nd.compile(self))
-            lp = self.parent_stack.get_last()
-            lp.data.append("".join(nd.compile(self)))
+        # print("exit:", node, current)
+        # print("childs:", self.scoped_childs)
+        # print()
 
-        if root:
-            self.compiled_data = "\n".join([x.rstrip() for x in nd.compile(self)])
+        del self.scoped_last_parent
 
-        if nd.new_scope:
-            self.indent_level -= 1
+        if self.scoped_last_parent is None:
+            self.result = current
 
-        print("exit:", node, nd.data)
+        self.decrement_scope_level()
 
+    def _compile_node(self, node, childs):
+        name = node.__class__.__name__
+        fn = getattr(self, "_compile_{}".format(name), None)
+        if fn:
+            return fn(node, childs)
 
-# Nodes definition
+    def _compile_BinOp(self, node, childs):
 
-class Node(metaclass=NodeMeta):
-    new_scope = False
-    is_root = False
+        n = slim_ast.BinOp(childs[1].node,
+                           childs[0].node,
+                           childs[2].node)
 
-    def __init__(self, node):
-        self.node = node
-        self.data = []
+        # Ugly hack
+        if "BinOp" not in [x.node.__class__.__name__ for x in childs]:
+            n._parens = True
 
-    def get_code(self):
-        raise NotImplementedError()
+        return n
 
+    def _compile_Num(self, node, childs):
+        return slim_ast.Number(node.n)
 
-class Module(Node):
-    new_scope = True
-    is_root = True
+    def _compile_Add(self, node, childs):
+        return "+"
 
-    def compile(self, compiler):
-        module_code = [
-            ";(function(this) {",
-            "\n".join(self.data),
-            "}).call(this);",
-        ]
+    def _compile_Return(self, node, childs):
+        return slim_ast.Return(childs[0].node)
 
-        return module_code
+    def _compile_FunctionDef(self, node, childs):
+        return slim_ast.FuncDecl(slim_ast.Identifier(node.name),
+                                 None,
+                                 [x.node for x in childs[1:]])
 
-
-class Expr(Node):
-    def compile(self, compiler):
-        return [compiler.indent_str_expr(" ".join(self.data)), ";"]
-
-
-class BinOp(Node):
-    def compile(self, compiler):
-        return [" ".join(self.data)]
-
-
-class Num(Node):
-    def compile(self, compiler):
-        return [str(self.node.n)]
-
-
-class Add(Node):
-    def compile(self, compiler):
-        return ["+"]
-
-
-class Sub(Node):
-    def get_code(self, indent=0):
-        return "-"
-
-
-class Mult(Node):
-    def get_code(self, indent=0):
-        return "*"
-
-
-class Div(Node):
-    def get_code(self, indent=0):
-        return "/"
-
-
-class arguments(Expr):
-    pass
-
-
-class Return(Expr):
-    def compile(self, compiler):
-        return [" ".join(self.data), ";"]
-
-class FunctionDef(Node):
-    new_scope = True
-
-    def compile(self, compiler):
-        code = []
-
-        main = "var {0} = function ()".format(self.node.name)
-        code.append(compiler.indent_str_expr(main, modifier=-1))
-        code.append("{")
-
-        for code_expr in self.data:
-            code.append(compiler.indent_str_expr(code_expr))
-            code.append("\n")
-
-        code.append(compiler.indent_str_expr("};\n", modifier=-1))
-        return code
-
+    def _compile_Module(self, node, childs):
+        return slim_ast.Program([x.node for x in childs])
 
 def compile(string):
     tree = ast.parse(string)
