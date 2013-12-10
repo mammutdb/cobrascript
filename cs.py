@@ -113,12 +113,14 @@ class CompilerVisitor(ast.NodeVisitor):
         if self.parents_stack.is_empty():
             self.result = node_wrapper
 
+    # Special visit fields
+
     def visit_BinOp(self, node):
         self.bin_op_stack.push(node)
-        # print("VISIT1", node)
         self.generic_visit(node)
-        # print("VISIT2", node)
         self.bin_op_stack.pop()
+
+    # Compile visit fields
 
     def _compile_node(self, node, childs):
         name = node.__class__.__name__
@@ -127,7 +129,6 @@ class CompilerVisitor(ast.NodeVisitor):
             return fn(node, childs)
 
     def _compile_BinOp(self, node, childs):
-
         n = slim_ast.BinOp(childs[1].node,
                            childs[0].node,
                            childs[2].node)
@@ -143,16 +144,28 @@ class CompilerVisitor(ast.NodeVisitor):
     def _compile_Add(self, node, childs):
         return "+"
 
+    def _compile_Mult(self, node, childs):
+        return "*"
+
     def _compile_Return(self, node, childs):
         return slim_ast.Return(childs[0].node)
 
     def _compile_FunctionDef(self, node, childs):
         return slim_ast.FuncDecl(slim_ast.Identifier(node.name),
-                                 None,
+                                 childs[0].node,
                                  [x.node for x in childs[1:]])
 
     def _compile_Module(self, node, childs):
         return slim_ast.Program([x.node for x in childs])
+
+    def _compile_arguments(self, node, childs):
+        return [x.node for x in childs]
+
+    def _compile_Name(self, node, childs):
+        return slim_ast.Identifier(node.id)
+
+    def _compile_arg(self, node, childs):
+        return slim_ast.Identifier(node.arg)
 
 def compile(string):
     tree = ast.parse(string)

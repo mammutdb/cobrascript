@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
 
-2 + 1
-
-
+def fobar(a, b):
+    return a * b
