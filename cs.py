@@ -8,6 +8,7 @@ import sys
 import pprint
 
 from collections import defaultdict
+from collections import ChainMap
 
 import slimit.ast as slim_ast
 
@@ -59,6 +60,31 @@ class LeveledStack(object):
         return self.data[self.level]
 
 
+class ScopeStack(object):
+    def __init__(self):
+        self.data = ChainMap({})
+
+    def __contains__(self, key):
+        return key in self.data
+
+    def set(self, key, value):
+        self.data[key] = value
+
+    def is_empty(self):
+        return len(self.data) == 0
+
+    def new_scope(self):
+        self.data = self.data.new_child()
+
+    def drop_scope(self):
+        self.data = self.data.parents
+
+    def first(self):
+        if len(self.data.maps) == 0:
+            return {}
+        return self.data.maps[0]
+
+
 class NodeWrapper(object):
     def __init__(self):
         self.node = None
@@ -71,9 +97,9 @@ class CompilerVisitor(ast.NodeVisitor):
     def __init__(self):
         super().__init__()
 
-        self.parents_stack = GenericStack()
         self.level_stack = LeveledStack()
         self.bin_op_stack = GenericStack()
+        self.scope = ScopeStack()
 
         self.indentation = 0
         self.debug = True
@@ -90,19 +116,18 @@ class CompilerVisitor(ast.NodeVisitor):
     def visit(self, node, root=False):
         node_wrapper = NodeWrapper()
 
-        self.parents_stack.push(node_wrapper)
         self.level_stack.append(node_wrapper)
         self.level_stack.inc_level()
 
         self.print("enter:", node)
+        self._pre_visit_node(node, node_wrapper)
 
         self.indentation += 1
         super().visit(node)
         self.indentation -= 1
 
         # import pdb; pdb.set_trace()
-
-        node_wrapper = self.parents_stack.pop()
+        self._post_visit_node(node, node_wrapper)
         node_wrapper.node = self._compile_node(node, self.level_stack.get_value())
 
         self.print("childs:", self.level_stack.get_value())
@@ -110,7 +135,7 @@ class CompilerVisitor(ast.NodeVisitor):
 
         self.level_stack.dec_level()
 
-        if self.parents_stack.is_empty():
+        if self.indentation == 0:
             self.result = node_wrapper
 
     # Special visit fields
@@ -120,13 +145,35 @@ class CompilerVisitor(ast.NodeVisitor):
         self.generic_visit(node)
         self.bin_op_stack.pop()
 
-    # Compile visit fields
+    # Compile methods
+
+    def _pre_visit_node(self, node, wrapper):
+        name = node.__class__.__name__
+        fn = getattr(self, "_pre_visit_{}".format(name), None)
+        if fn:
+            return fn(node, wrapper)
+
+    def _post_visit_node(self, node, wrapper):
+        name = node.__class__.__name__
+        fn = getattr(self, "_post_visit_{}".format(name), None)
+        if fn:
+            return fn(node, wrapper)
 
     def _compile_node(self, node, childs):
         name = node.__class__.__name__
         fn = getattr(self, "_compile_{}".format(name), None)
         if fn:
             return fn(node, childs)
+
+    # Pre/Post Compile specific methods
+
+    def _pre_visit_Module(self, node, wrapper):
+        self.scope.new_scope()
+
+    def _pre_visit_FunctionDef(self, node, wrapper):
+        self.scope.new_scope()
+
+    # Specific compile methods
 
     def _compile_BinOp(self, node, childs):
         n = slim_ast.BinOp(childs[1].node,
@@ -151,12 +198,25 @@ class CompilerVisitor(ast.NodeVisitor):
         return slim_ast.Return(childs[0].node)
 
     def _compile_FunctionDef(self, node, childs):
-        return slim_ast.FuncDecl(slim_ast.Identifier(node.name),
-                                 childs[0].node,
-                                 [x.node for x in childs[1:]])
+        identifier = slim_ast.Identifier(node.name)
+        func_expr = slim_ast.FuncExpr(None, childs[0].node, [x.node for x in childs[1:]])
+        var_decl = slim_ast.VarDecl(identifier, func_expr)
+
+        # Drop inner scope (temporary is unused)
+        self.scope.drop_scope()
+
+        if node.name not in self.scope:
+            self.scope.set(node.name, identifier)
+
+        return var_decl
 
     def _compile_Module(self, node, childs):
-        return slim_ast.Program([x.node for x in childs])
+        childs = [x.node for x in childs]
+        identifiers = list(self.scope.first().values())
+        var_decls = list(map(lambda x: slim_ast.VarDecl(x), identifiers))
+
+        self.scope.drop_scope()
+        return slim_ast.Program([slim_ast.VarStatement(var_decls)] + childs)
 
     def _compile_arguments(self, node, childs):
         return [x.node for x in childs]
@@ -184,6 +244,7 @@ class CompilerVisitor(ast.NodeVisitor):
             properties.append(assign_instance)
 
         return slim_ast.Object(properties)
+
 
 def compile(string):
     tree = ast.parse(string)
