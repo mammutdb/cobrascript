@@ -126,7 +126,6 @@ class CompilerVisitor(ast.NodeVisitor):
         super().visit(node)
         self.indentation -= 1
 
-        # import pdb; pdb.set_trace()
         self._post_visit_node(node, node_wrapper)
         node_wrapper.node = self._compile_node(node, self.level_stack.get_value())
 
@@ -210,6 +209,21 @@ class CompilerVisitor(ast.NodeVisitor):
 
         return var_decl
 
+    def _compile_Lambda(self, node, childs):
+        # identifier = slim_ast.Identifier(node.name)
+        func_expr = slim_ast.FuncExpr(None, childs[0].node, [x.node for x in childs[1:]])
+
+        return func_expr
+        # var_decl = slim_ast.VarDecl(identifier, func_expr)
+
+        # # Drop inner scope (temporary is unused)
+        # self.scope.drop_scope()
+
+        # if node.name not in self.scope:
+        #     self.scope.set(node.name, identifier)
+
+        # return var_decl
+
     def _compile_Module(self, node, childs):
         childs = [x.node for x in childs]
         identifiers = list(self.scope.first().values())
@@ -217,6 +231,12 @@ class CompilerVisitor(ast.NodeVisitor):
 
         self.scope.drop_scope()
         return slim_ast.Program([slim_ast.VarStatement(var_decls)] + childs)
+
+    def _compile_Expr(self, node, childs):
+        return slim_ast.ExprStatement(childs[0].node)
+
+    # def _compile_Attribute(self, node, childs):
+    #     import pdb; pdb.set_trace()
 
     def _compile_arguments(self, node, childs):
         return [x.node for x in childs]
@@ -228,13 +248,41 @@ class CompilerVisitor(ast.NodeVisitor):
         return slim_ast.Identifier(node.arg)
 
     def _compile_Str(self, node, childs):
-        return node.s
+        return slim_ast.String('"{}"'.format(node.s))
+
+    def _compile_Call(self, node, childs):
+        if isinstance(node.func, ast.Name):
+            fcall = slim_ast.FunctionCall(childs[0].node, [x.node for x in childs[1:]])
+            return fcall
+
+        elif isinstance(node.func, ast.Attribute):
+            arguments = list(filter(bool, [x.node for x in childs]))
+
+            node_attribute_identifier = slim_ast.Identifier(node.func.value.id)
+            node_attribute_call_identifier = slim_ast.Identifier(node.func.attr)
+
+            dotaccessor = slim_ast.DotAccessor(node_attribute_identifier,
+                                               node_attribute_call_identifier)
+            function_call = slim_ast.FunctionCall(dotaccessor, arguments)
+            return function_call
+
+        raise NotImplementedException(":D")
+
+    def _compile_Assign(self, node, childs):
+        identifier = childs[0].node
+        right_part = childs[1].node
+
+        var_decl = slim_ast.VarDecl(identifier, right_part)
+
+        if identifier.value not in self.scope:
+            self.scope.set(identifier.value, identifier)
+
+        return var_decl
 
     def _compile_Dict(self, node, childs):
         properties = []
 
         msize = int(len(childs)/2)
-
         keys = [x.node for x in childs[:msize]]
         values = [x.node for x in childs[msize:]]
 
