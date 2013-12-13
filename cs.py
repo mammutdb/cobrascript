@@ -116,7 +116,6 @@ class CompilerVisitor(ast.NodeVisitor):
     def visit(self, node, root=False):
         node_wrapper = NodeWrapper()
 
-        self.level_stack.append(node_wrapper)
         self.level_stack.inc_level()
 
         self.print("enter:", node)
@@ -133,6 +132,9 @@ class CompilerVisitor(ast.NodeVisitor):
         self.print("exit:", node)
 
         self.level_stack.dec_level()
+
+        if node_wrapper.node is not None:
+            self.level_stack.append(node_wrapper)
 
         if self.indentation == 0:
             self.result = node_wrapper
@@ -197,8 +199,19 @@ class CompilerVisitor(ast.NodeVisitor):
         return slim_ast.Return(childs[0].node)
 
     def _compile_FunctionDef(self, node, childs):
+        # Scope var declaration
+        scope_identifiers = list(self.scope.first().values())
+        scope_var_decls = list(map(lambda x: slim_ast.VarDecl(x), scope_identifiers))
+        scope_var_statement = slim_ast.VarStatement(scope_var_decls)
+
+        arguments = [x.node for x in childs[1:]]
+
+        # Add scope var statement only if any var is defined
+        if len(scope_var_decls) > 0:
+            arguments = [scope_var_statement] + arguments
+
         identifier = slim_ast.Identifier(node.name)
-        func_expr = slim_ast.FuncExpr(None, childs[0].node, [x.node for x in childs[1:]])
+        func_expr = slim_ast.FuncExpr(None, childs[0].node, arguments)
         var_decl = slim_ast.VarDecl(identifier, func_expr)
 
         # Drop inner scope (temporary is unused)
@@ -214,29 +227,18 @@ class CompilerVisitor(ast.NodeVisitor):
         func_expr = slim_ast.FuncExpr(None, childs[0].node, [x.node for x in childs[1:]])
 
         return func_expr
-        # var_decl = slim_ast.VarDecl(identifier, func_expr)
-
-        # # Drop inner scope (temporary is unused)
-        # self.scope.drop_scope()
-
-        # if node.name not in self.scope:
-        #     self.scope.set(node.name, identifier)
-
-        # return var_decl
 
     def _compile_Module(self, node, childs):
-        childs = [x.node for x in childs]
         identifiers = list(self.scope.first().values())
         var_decls = list(map(lambda x: slim_ast.VarDecl(x), identifiers))
-
+        var_statement = slim_ast.VarStatement(var_decls)
         self.scope.drop_scope()
-        return slim_ast.Program([slim_ast.VarStatement(var_decls)] + childs)
+
+        childs = [x.node for x in childs]
+        return slim_ast.Program([var_statement] + childs)
 
     def _compile_Expr(self, node, childs):
         return slim_ast.ExprStatement(childs[0].node)
-
-    # def _compile_Attribute(self, node, childs):
-    #     import pdb; pdb.set_trace()
 
     def _compile_arguments(self, node, childs):
         return [x.node for x in childs]
@@ -266,18 +268,36 @@ class CompilerVisitor(ast.NodeVisitor):
             function_call = slim_ast.FunctionCall(dotaccessor, arguments)
             return function_call
 
-        raise NotImplementedException(":D")
+        raise NotImplementedError(":D")
 
     def _compile_Assign(self, node, childs):
-        identifier = childs[0].node
-        right_part = childs[1].node
+        if isinstance(node.value, (ast.Name, ast.List)):
+            # FIXME: multiple targets
+            target = node.targets[0]
 
-        var_decl = slim_ast.VarDecl(identifier, right_part)
+            variable_identifier = slim_ast.Identifier(target.value.id)
+            attribute_access_identifier = slim_ast.Identifier(target.attr)
+            dotaccessor = slim_ast.DotAccessor(variable_identifier, attribute_access_identifier)
 
-        if identifier.value not in self.scope:
-            self.scope.set(identifier.value, identifier)
+            var_decl = slim_ast.VarDecl(dotaccessor, childs[0].node)
+            return var_decl
 
-        return var_decl
+        elif isinstance(node.value, ast.Call):
+            # TODO: review node.value for possible use.
+            identifier = childs[0].node
+            right_part = childs[1].node
+
+            var_decl = slim_ast.VarDecl(identifier, right_part)
+
+            if identifier.value not in self.scope:
+                self.scope.set(identifier.value, identifier)
+
+            return var_decl
+
+        raise NotImplementedError(":D")
+
+    def _compile_List(self, node, childs):
+        return slim_ast.Array([x.node for x in childs])
 
     def _compile_Dict(self, node, childs):
         properties = []
