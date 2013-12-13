@@ -287,7 +287,7 @@ class CompilerVisitor(ast.NodeVisitor):
         values = [x.node for x in childs[msize:]]
 
         for key, value in zip(keys, values):
-            identifier = slim_ast.Identifier(key)
+            identifier = slim_ast.Identifier(key.value)
             assign_instance = slim_ast.Assign(":", identifier, value)
             properties.append(assign_instance)
 
