@@ -220,12 +220,11 @@ class CompilerVisitor(ast.NodeVisitor):
         if node.name not in self.scope:
             self.scope.set(node.name, identifier)
 
-        return var_decl
+        return slim_ast.ExprStatement(var_decl)
 
     def _compile_Lambda(self, node, childs):
-        # identifier = slim_ast.Identifier(node.name)
-        func_expr = slim_ast.FuncExpr(None, childs[0].node, [x.node for x in childs[1:]])
-
+        exprs = map(slim_ast.ExprStatement, [x.node for x in childs[1:]])
+        func_expr = slim_ast.FuncExpr(None, childs[0].node, list(exprs))
         return func_expr
 
     def _compile_Module(self, node, childs):
@@ -280,7 +279,7 @@ class CompilerVisitor(ast.NodeVisitor):
             dotaccessor = slim_ast.DotAccessor(variable_identifier, attribute_access_identifier)
 
             var_decl = slim_ast.VarDecl(dotaccessor, childs[0].node)
-            return var_decl
+            return slim_ast.ExprStatement(var_decl)
 
         elif isinstance(node.value, ast.Call):
             # TODO: review node.value for possible use.
@@ -292,7 +291,7 @@ class CompilerVisitor(ast.NodeVisitor):
             if identifier.value not in self.scope:
                 self.scope.set(identifier.value, identifier)
 
-            return var_decl
+            return slim_ast.ExprStatement(var_decl)
 
         raise NotImplementedError(":D")
 
