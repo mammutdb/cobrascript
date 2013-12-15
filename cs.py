@@ -122,6 +122,7 @@ class CompilerVisitor(ast.NodeVisitor):
         self._pre_visit_node(node, node_wrapper)
 
         self.indentation += 1
+
         super().visit(node)
         self.indentation -= 1
 
@@ -257,36 +258,47 @@ class CompilerVisitor(ast.NodeVisitor):
             return fcall
 
         elif isinstance(node.func, ast.Attribute):
-            arguments = list(filter(bool, [x.node for x in childs]))
+            dotaccessor = childs[0].node
+            arguments = list(filter(bool, [x.node for x in childs[1:]]))
 
-            node_attribute_identifier = slim_ast.Identifier(node.func.value.id)
-            node_attribute_call_identifier = slim_ast.Identifier(node.func.attr)
-
-            dotaccessor = slim_ast.DotAccessor(node_attribute_identifier,
-                                               node_attribute_call_identifier)
             function_call = slim_ast.FunctionCall(dotaccessor, arguments)
             return function_call
 
         raise NotImplementedError(":D")
 
+    def _compile_Attribute(self, node, childs):
+        variable_identifier = childs[0].node
+        attribute_access_identifier = slim_ast.Identifier(node.attr)
+        dotaccessor = slim_ast.DotAccessor(variable_identifier, attribute_access_identifier)
+        return dotaccessor
+
     def _compile_Assign(self, node, childs):
-        if isinstance(node.value, (ast.Name, ast.List)):
-            # FIXME: multiple targets
-            target = node.targets[0]
+        if isinstance(node.value, (ast.Name, ast.List, ast.Num)):
+            assign_decl = None
 
-            variable_identifier = slim_ast.Identifier(target.value.id)
-            attribute_access_identifier = slim_ast.Identifier(target.attr)
-            dotaccessor = slim_ast.DotAccessor(variable_identifier, attribute_access_identifier)
 
-            var_decl = slim_ast.VarDecl(dotaccessor, childs[0].node)
-            return slim_ast.ExprStatement(var_decl)
+            identifiers = [x.node for x in childs[:-1]]
+            value = childs[-1].node
+
+            for target in reversed(identifiers):
+                if isinstance(target, slim_ast.Identifier):
+                    if target.value not in self.scope:
+                        self.scope.set(target.value, target)
+
+                if assign_decl is None:
+                    assign_decl = slim_ast.Assign("=", target, value)
+                else:
+                    assign_decl = slim_ast.Assign("=", target, assign_decl)
+
+            expr = slim_ast.ExprStatement(assign_decl)
+            return expr
 
         elif isinstance(node.value, ast.Call):
             # TODO: review node.value for possible use.
             identifier = childs[0].node
             right_part = childs[1].node
 
-            var_decl = slim_ast.VarDecl(identifier, right_part)
+            var_decl = slim_ast.Assign("=", identifier, right_part)
 
             if identifier.value not in self.scope:
                 self.scope.set(identifier.value, identifier)
@@ -294,6 +306,19 @@ class CompilerVisitor(ast.NodeVisitor):
             return slim_ast.ExprStatement(var_decl)
 
         raise NotImplementedError(":D")
+
+    def _compile_Index(self, node, childs):
+        # FIXME: seems to be incomplete
+        return childs[0].node
+
+    def _compile_Subscript(self, node, childs):
+        node_identifier = childs[0].node
+        expr_identifier = childs[1].node
+
+        if node_identifier.value not in self.scope:
+            raise RuntimeError("undefined variable {} at line {}".format(node_identifier.value,
+                                                                         node.lineno))
+        return slim_ast.BracketAccessor(node_identifier, expr_identifier)
 
     def _compile_List(self, node, childs):
         return slim_ast.Array([x.node for x in childs])
@@ -311,7 +336,6 @@ class CompilerVisitor(ast.NodeVisitor):
             properties.append(assign_instance)
 
         return slim_ast.Object(properties)
-
 
 def compile(string):
     tree = ast.parse(string)

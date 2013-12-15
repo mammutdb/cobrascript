@@ -15,4 +15,5 @@ def fooController(scope, rootScope, config):
     scope.updateUserStory = updateUserStory
 
 
-fooController.inject = ["$scope", "$rootScope", "config"]
+fooController["$inject"] = ["$scope", "$rootScope", "config"]
+tttt = xxx = 222
