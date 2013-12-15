@@ -239,38 +239,22 @@ class CompilerVisitor(ast.NodeVisitor):
         return dotaccessor
 
     def _compile_Assign(self, node, childs):
-        if isinstance(node.value, (ast.Name, ast.List, ast.Num)):
-            assign_decl = None
+        identifiers = childs[:-1]
+        value = childs[-1]
 
-            identifiers = childs[:-1]
-            value = childs[-1]
+        assign_decl = None
 
-            for target in reversed(identifiers):
-                if isinstance(target, slim_ast.Identifier):
-                    if target.value not in self.scope:
-                        self.scope.set(target.value, target)
+        for target in reversed(identifiers):
+            if isinstance(target, slim_ast.Identifier):
+                if target.value not in self.scope:
+                    self.scope.set(target.value, target)
 
-                if assign_decl is None:
-                    assign_decl = slim_ast.Assign("=", target, value)
-                else:
-                    assign_decl = slim_ast.Assign("=", target, assign_decl)
+            if assign_decl is None:
+                assign_decl = slim_ast.Assign("=", target, value)
+            else:
+                assign_decl = slim_ast.Assign("=", target, assign_decl)
 
-            expr = slim_ast.ExprStatement(assign_decl)
-            return expr
-
-        elif isinstance(node.value, ast.Call):
-            # TODO: review node.value for possible use.
-            identifier = childs[0]
-            right_part = childs[1]
-
-            var_decl = slim_ast.Assign("=", identifier, right_part)
-
-            if identifier.value not in self.scope:
-                self.scope.set(identifier.value, identifier)
-
-            return slim_ast.ExprStatement(var_decl)
-
-        raise NotImplementedError(":D")
+        return slim_ast.ExprStatement(assign_decl)
 
     def _compile_Index(self, node, childs):
         # FIXME: seems to be incomplete
