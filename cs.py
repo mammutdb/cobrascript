@@ -85,14 +85,6 @@ class ScopeStack(object):
         return self.data.maps[0]
 
 
-class NodeWrapper(object):
-    def __init__(self):
-        self.node = None
-
-    def __repr__(self):
-        return "<wrapper {}>".format(repr(self.node))
-
-
 class CompilerVisitor(ast.NodeVisitor):
     def __init__(self):
         super().__init__()
@@ -111,34 +103,33 @@ class CompilerVisitor(ast.NodeVisitor):
 
     def compile_ast(self, ast_tree):
         self.visit(ast_tree, root=True)
-        return self.result.node.to_ecma()
+        return self.result.to_ecma()
 
     def visit(self, node, root=False):
-        node_wrapper = NodeWrapper()
-
         self.level_stack.inc_level()
 
         self.print("enter:", node)
-        self._pre_visit_node(node, node_wrapper)
+
+        if isinstance(node, (ast.Module, ast.FunctionDef)):
+            self.scope.new_scope()
 
         self.indentation += 1
 
         super().visit(node)
         self.indentation -= 1
 
-        self._post_visit_node(node, node_wrapper)
-        node_wrapper.node = self._compile_node(node, self.level_stack.get_value())
+        js_node = self._compile_node(node, self.level_stack.get_value())
 
         self.print("childs:", self.level_stack.get_value())
         self.print("exit:", node)
 
         self.level_stack.dec_level()
 
-        if node_wrapper.node is not None:
-            self.level_stack.append(node_wrapper)
+        if js_node is not None:
+            self.level_stack.append(js_node)
 
         if self.indentation == 0:
-            self.result = node_wrapper
+            self.result = js_node
 
     # Special visit fields
 
@@ -149,42 +140,18 @@ class CompilerVisitor(ast.NodeVisitor):
 
     # Compile methods
 
-    def _pre_visit_node(self, node, wrapper):
-        name = node.__class__.__name__
-        fn = getattr(self, "_pre_visit_{}".format(name), None)
-        if fn:
-            return fn(node, wrapper)
-
-    def _post_visit_node(self, node, wrapper):
-        name = node.__class__.__name__
-        fn = getattr(self, "_post_visit_{}".format(name), None)
-        if fn:
-            return fn(node, wrapper)
-
     def _compile_node(self, node, childs):
         name = node.__class__.__name__
         fn = getattr(self, "_compile_{}".format(name), None)
         if fn:
             return fn(node, childs)
 
-    # Pre/Post Compile specific methods
-
-    def _pre_visit_Module(self, node, wrapper):
-        self.scope.new_scope()
-
-    def _pre_visit_FunctionDef(self, node, wrapper):
-        self.scope.new_scope()
-
     # Specific compile methods
 
     def _compile_BinOp(self, node, childs):
-        n = slim_ast.BinOp(childs[1].node,
-                           childs[0].node,
-                           childs[2].node)
-
+        n = slim_ast.BinOp(childs[1], childs[0], childs[2])
         if not self.bin_op_stack.is_empty():
             n._parens = True
-
         return n
 
     def _compile_Num(self, node, childs):
@@ -197,7 +164,7 @@ class CompilerVisitor(ast.NodeVisitor):
         return "*"
 
     def _compile_Return(self, node, childs):
-        return slim_ast.Return(childs[0].node)
+        return slim_ast.Return(childs[0])
 
     def _compile_FunctionDef(self, node, childs):
         # Scope var declaration
@@ -205,14 +172,14 @@ class CompilerVisitor(ast.NodeVisitor):
         scope_var_decls = list(map(lambda x: slim_ast.VarDecl(x), scope_identifiers))
         scope_var_statement = slim_ast.VarStatement(scope_var_decls)
 
-        arguments = [x.node for x in childs[1:]]
+        arguments = childs[1:]
 
         # Add scope var statement only if any var is defined
         if len(scope_var_decls) > 0:
             arguments = [scope_var_statement] + arguments
 
         identifier = slim_ast.Identifier(node.name)
-        func_expr = slim_ast.FuncExpr(None, childs[0].node, arguments)
+        func_expr = slim_ast.FuncExpr(None, childs[0], arguments)
         var_decl = slim_ast.VarDecl(identifier, func_expr)
 
         # Drop inner scope (temporary is unused)
@@ -224,8 +191,8 @@ class CompilerVisitor(ast.NodeVisitor):
         return slim_ast.ExprStatement(var_decl)
 
     def _compile_Lambda(self, node, childs):
-        exprs = map(slim_ast.ExprStatement, [x.node for x in childs[1:]])
-        func_expr = slim_ast.FuncExpr(None, childs[0].node, list(exprs))
+        exprs = map(slim_ast.ExprStatement, childs[1:])
+        func_expr = slim_ast.FuncExpr(None, childs[0], list(exprs))
         return func_expr
 
     def _compile_Module(self, node, childs):
@@ -234,14 +201,13 @@ class CompilerVisitor(ast.NodeVisitor):
         var_statement = slim_ast.VarStatement(var_decls)
         self.scope.drop_scope()
 
-        childs = [x.node for x in childs]
         return slim_ast.Program([var_statement] + childs)
 
     def _compile_Expr(self, node, childs):
-        return slim_ast.ExprStatement(childs[0].node)
+        return slim_ast.ExprStatement(childs[0])
 
     def _compile_arguments(self, node, childs):
-        return [x.node for x in childs]
+        return childs
 
     def _compile_Name(self, node, childs):
         return slim_ast.Identifier(node.id)
@@ -254,12 +220,12 @@ class CompilerVisitor(ast.NodeVisitor):
 
     def _compile_Call(self, node, childs):
         if isinstance(node.func, ast.Name):
-            fcall = slim_ast.FunctionCall(childs[0].node, [x.node for x in childs[1:]])
+            fcall = slim_ast.FunctionCall(childs[0], childs[1:])
             return fcall
 
         elif isinstance(node.func, ast.Attribute):
-            dotaccessor = childs[0].node
-            arguments = list(filter(bool, [x.node for x in childs[1:]]))
+            dotaccessor = childs[0]
+            arguments = list(filter(bool, childs[1:]))
 
             function_call = slim_ast.FunctionCall(dotaccessor, arguments)
             return function_call
@@ -267,7 +233,7 @@ class CompilerVisitor(ast.NodeVisitor):
         raise NotImplementedError(":D")
 
     def _compile_Attribute(self, node, childs):
-        variable_identifier = childs[0].node
+        variable_identifier = childs[0]
         attribute_access_identifier = slim_ast.Identifier(node.attr)
         dotaccessor = slim_ast.DotAccessor(variable_identifier, attribute_access_identifier)
         return dotaccessor
@@ -276,9 +242,8 @@ class CompilerVisitor(ast.NodeVisitor):
         if isinstance(node.value, (ast.Name, ast.List, ast.Num)):
             assign_decl = None
 
-
-            identifiers = [x.node for x in childs[:-1]]
-            value = childs[-1].node
+            identifiers = childs[:-1]
+            value = childs[-1]
 
             for target in reversed(identifiers):
                 if isinstance(target, slim_ast.Identifier):
@@ -295,8 +260,8 @@ class CompilerVisitor(ast.NodeVisitor):
 
         elif isinstance(node.value, ast.Call):
             # TODO: review node.value for possible use.
-            identifier = childs[0].node
-            right_part = childs[1].node
+            identifier = childs[0]
+            right_part = childs[1]
 
             var_decl = slim_ast.Assign("=", identifier, right_part)
 
@@ -309,11 +274,11 @@ class CompilerVisitor(ast.NodeVisitor):
 
     def _compile_Index(self, node, childs):
         # FIXME: seems to be incomplete
-        return childs[0].node
+        return childs[0]
 
     def _compile_Subscript(self, node, childs):
-        node_identifier = childs[0].node
-        expr_identifier = childs[1].node
+        node_identifier = childs[0]
+        expr_identifier = childs[1]
 
         if node_identifier.value not in self.scope:
             raise RuntimeError("undefined variable {} at line {}".format(node_identifier.value,
@@ -321,14 +286,14 @@ class CompilerVisitor(ast.NodeVisitor):
         return slim_ast.BracketAccessor(node_identifier, expr_identifier)
 
     def _compile_List(self, node, childs):
-        return slim_ast.Array([x.node for x in childs])
+        return slim_ast.Array(childs)
 
     def _compile_Dict(self, node, childs):
         properties = []
 
         msize = int(len(childs)/2)
-        keys = [x.node for x in childs[:msize]]
-        values = [x.node for x in childs[msize:]]
+        keys = childs[:msize]
+        values = childs[msize:]
 
         for key, value in zip(keys, values):
             identifier = slim_ast.Identifier(key.value)
