@@ -79,7 +79,7 @@ class TranslateVisitor(ast.NodeVisitor):
         return n
 
     def _translate_Num(self, node, childs):
-        return ecma_ast.Number(node.n)
+        return ecma_ast.Number(str(node.n))
 
     def _translate_Add(self, node, childs):
         return "+"
