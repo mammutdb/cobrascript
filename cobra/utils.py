@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import textwrap
+
 from collections import defaultdict
 from collections import ChainMap
+
+
+def normalize(data:str):
+    return textwrap.dedent(data).strip()
 
 
 class GenericStack(object):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import textwrap
+from cobra.utils import normalize
 
-def norm(data:str):
-    return textwrap.dedent(data).strip()
+def norm(data):
+    return normalize(data)

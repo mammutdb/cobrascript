@@ -5,6 +5,7 @@ import ast
 from . import ast as ecma_ast
 from . import compiler
 from . import translator
+from . import utils
 
 
 def parse(data:str) -> object:
