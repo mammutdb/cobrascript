@@ -101,6 +101,9 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _create_scope_var_statement(self):
         scope_identifiers = list(self.scope.first().values())
+        if len(scope_identifiers) == 0:
+            return None
+
         scope_identifiers = sorted(scope_identifiers, key=lambda x: x.value)
         scope_var_decls = list(map(lambda x: ecma_ast.VarDecl(x), scope_identifiers))
         return ecma_ast.VarStatement(scope_var_decls)
@@ -110,7 +113,7 @@ class TranslateVisitor(ast.NodeVisitor):
         arguments = childs[1:]
 
         # Add scope var statement only if any var is defined
-        if len(scope_var_decls) > 0:
+        if scope_var_statement:
             arguments = [scope_var_statement] + arguments
 
         identifier = ecma_ast.Identifier(node.name)
@@ -133,7 +136,10 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_Module(self, node, childs):
         scope_var_statement = self._create_scope_var_statement()
         self.scope.drop_scope()
-        return ecma_ast.Program([scope_var_statement] + childs)
+
+        if scope_var_statement:
+            return ecma_ast.Program([scope_var_statement] + childs)
+        return ecma_ast.Program(childs)
 
     def _translate_Expr(self, node, childs):
         return ecma_ast.ExprStatement(childs[0])
