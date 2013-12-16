@@ -26,7 +26,10 @@ def translate(data:object) -> object:
     return translator.TranslateVisitor().translate(data)
 
 
-def compile(data:str) -> str:
+def compile(data:str, normalize:bool=True) -> str:
+    if normalize:
+        data = utils.normalize(data)
+
     python_tree = parse(data)
     ecma_tree = translate(python_tree)
     return compiler.ECMAVisitor().visit(ecma_tree)
