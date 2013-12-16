@@ -263,3 +263,15 @@ def test_simple_if_statement_with_elif():
     """
 
     assert compile(input) == norm(expected)
+
+
+# def test_basic_class():
+#     input = """
+#     class MyClass:
+#         def foo(self):
+#             return 2
+#     """
+#
+#     expected = ""
+#
+#     assert compile(input) == norm(expected)
