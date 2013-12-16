@@ -87,6 +87,15 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_Mult(self, node, childs):
         return "*"
 
+    def _translate_Sub(self, node, childs):
+        return "-"
+
+    def _translate_Div(self, node, childs):
+        return "/"
+
+    def _translate_Mod(self, node, childs):
+        return "%"
+
     def _translate_Return(self, node, childs):
         return ecma_ast.Return(childs[0])
 
