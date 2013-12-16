@@ -231,3 +231,32 @@ class TranslateVisitor(ast.NodeVisitor):
             properties.append(assign_instance)
 
         return ecma_ast.Object(properties)
+
+    def _translate_If(self, node, childs):
+        predicate = childs[0]
+
+        # consecuent
+        consequent_blocks_size = len(node.body)
+        consequent_blocks = childs[1:consequent_blocks_size+1]
+        consequent = ecma_ast.Block(consequent_blocks)
+
+        # alternative
+        alternative_blocks_size = len(node.orelse)
+        alternative_blocks = childs[consequent_blocks_size+1:]
+
+        if alternative_blocks_size > 0:
+            if alternative_blocks_size == 1 and isinstance(alternative_blocks[0], ecma_ast.If):
+                alternative = alternative_blocks[0]
+            else:
+                alternative = ecma_ast.Block(alternative_blocks)
+        else:
+            alternative = None
+
+        ifnode = ecma_ast.If(predicate, consequent, alternative)
+        return ifnode
+
+    def _translate_Compare(self, node, childs):
+        binop = ecma_ast.BinOp(childs[1], childs[0], childs[2])
+        # if not self.bin_op_stack.is_empty():
+        #     n._parens = True
+        return binop

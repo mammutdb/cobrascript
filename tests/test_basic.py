@@ -197,3 +197,69 @@ def test_assign_dict_with_lists():
     """
 
     assert compile(input) == norm(expected)
+
+def test_simple_if_statement():
+    input = """
+    def foo(a):
+        if a is None:
+            return None
+
+        return a + 2
+    """
+
+    expected = """
+    var foo;
+    foo = function(a) {
+        if (a === null) {
+            return null;
+        }
+        return a + 2;
+    };
+    """
+
+    assert compile(input) == norm(expected)
+
+def test_simple_if_statement_with_else():
+    input = """
+    def foo(a):
+        if a is None:
+            return None
+        else:
+            return a + 2
+    """
+
+    expected = """
+    var foo;
+    foo = function(a) {
+        if (a === null) {
+            return null;
+        } else {
+            return a + 2;
+        }
+    };
+    """
+
+    assert compile(input) == norm(expected)
+
+
+def test_simple_if_statement_with_elif():
+    input = """
+    def foo(a):
+        if a is None:
+            return None
+        elif a == 0:
+            return a + 2
+    """
+
+    expected = """
+    var foo;
+    foo = function(a) {
+        if (a === null) {
+            return null;
+        } else if (a === 0) {
+            return a + 2;
+        }
+    };
+    """
+
+    assert compile(input) == norm(expected)
