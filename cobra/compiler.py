@@ -29,11 +29,12 @@ from . import ast
 
 class ECMAVisitor(object):
 
-    def __init__(self):
+    def __init__(self, indent_chars=2):
         self.indent_level = 0
+        self.indent_value = " " * indent_chars
 
     def _make_indent(self):
-        return ' ' * self.indent_level
+        return self.indent_value * self.indent_level
 
     def visit(self, node):
         method = 'visit_%s' % node.__class__.__name__
