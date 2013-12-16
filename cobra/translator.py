@@ -148,6 +148,8 @@ class TranslateVisitor(ast.NodeVisitor):
         return childs
 
     def _translate_Name(self, node, childs):
+        if node.id == "None":
+            return ecma_ast.Null(node.id)
         return ecma_ast.Identifier(node.id)
 
     def _translate_arg(self, node, childs):
