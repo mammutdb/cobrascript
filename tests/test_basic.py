@@ -39,6 +39,15 @@ def test_simple_assignation():
     assert compile(input) == norm(expected)
 
 
+def test_nested_operations():
+    input = "x = 2 * ((33 + 2.2) / 2)"
+    expected = """
+    var x;
+    x = 2 * ((33 + 2.2) / 2);
+    """
+    assert compile(input) == norm(expected)
+
+
 def test_none_assignation():
     input = "x = None"
     expected = """
@@ -132,6 +141,23 @@ def test_simple_function_call_with_multiple_args():
     expected = """
     var x;
     x = foo("Hello World", 2, 2.3);
+    """
+
+    assert compile(input) == norm(expected)
+
+
+def test_function_call_with_lambda_as_parameter():
+    input = """
+    x = jQuery(".span")
+    x.on("click", lambda e: e.preventDefault())
+    """
+
+    expected = """
+    var x;
+    x = jQuery(".span");
+    x.on("click", function(e) {
+        e.preventDefault();
+    });
     """
 
     assert compile(input) == norm(expected)
