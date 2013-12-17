@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import ast
+from collections import defaultdict
 
 from .utils import GenericStack
 from .utils import LeveledStack
@@ -17,6 +18,7 @@ class TranslateVisitor(ast.NodeVisitor):
         self.bin_op_stack = GenericStack()
         self.scope = ScopeStack()
 
+        self.references = defaultdict(lambda: 0)
         self.indentation = 0
         self.debug = True
 
@@ -260,3 +262,51 @@ class TranslateVisitor(ast.NodeVisitor):
         # if not self.bin_op_stack.is_empty():
         #     n._parens = True
         return binop
+
+    def get_unique_identifier(self, prefix="ref"):
+        for i in range(100000000):
+            candidate = "{}_{}".format(prefix, i)
+            if candidate not in self.scope:
+                identifier = ecma_ast.Identifier(candidate)
+                self.scope.set(candidate, identifier)
+                return identifier
+
+        raise RuntimeError(":(")
+
+    def _translate_For(self, node, childs):
+        counter_idf = self.get_unique_identifier()
+        iterable_idf = self.get_unique_identifier()
+
+        item_idf = childs[0]
+        iterable = childs[1]
+        main_body_expr = childs[2]
+
+        # counter_var_decl = ecma_ast.VarDecl(counter_idf)
+        # counter_var_stmt = ecma_ast.VarStatement(counter_var_decl)
+        iterable_var_decl = ecma_ast.VarDecl(iterable_idf, iterable)
+        iterable_var_stmt = ecma_ast.VarStatement(iterable_var_decl)
+
+
+        # For condition
+        cond_right_stmt = ecma_ast.DotAccessor(iterable_idf, ecma_ast.Identifier("length"))
+        cond = ecma_ast.BinOp("<", counter_idf, cond_right_stmt)
+
+        # For count
+        count = ecma_ast.UnaryOp("++", counter_idf, postfix=True)
+
+        # For init
+        init_first = ecma_ast.Assign("=", counter_idf, ecma_ast.Number("0"))
+        init_second = ecma_ast.Assign("=", iterable_idf, iterable)
+        init = ecma_ast.Comma(init_first, init_second)
+
+        # For body
+        accesor = ecma_ast.BracketAccessor(iterable_idf, counter_idf)
+        item_body_stmt = ecma_ast.ExprStatement(
+                            ecma_ast.Assign("=", item_idf, accesor))
+
+        body_block = ecma_ast.Block([item_body_stmt, main_body_expr])
+
+        # For
+        for_stmt = ecma_ast.For(init, cond, count, body_block)
+
+        return for_stmt

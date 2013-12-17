@@ -265,6 +265,21 @@ def test_simple_if_statement_with_elif():
     assert compile(input) == norm(expected)
 
 
+def test_basic_for():
+    input = """
+    for item in [1,2,3,4,5]:
+        console.log(item)
+    """
+
+    expected = """
+    var ref_0, ref_1;
+    for (ref_0 = 0, ref_1 = [1,2,3,4,5]; ref_0 < ref_1.length; ref_0++) {
+        item = ref_1[ref_0];
+        console.log(item);
+    }
+    """
+    assert compile(input) == norm(expected)
+
 # def test_basic_class():
 #     input = """
 #     class MyClass:
