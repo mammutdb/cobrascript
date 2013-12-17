@@ -280,6 +280,28 @@ def test_basic_for():
     """
     assert compile(input) == norm(expected)
 
+
+def test_nested_for():
+    input = """
+    for item1 in [1,2,3,4,5]:
+        for item2 in [10, 20, 34]:
+            console.log(item1, item2)
+    """
+
+    expected = """
+    var item1, item2, ref_0, ref_1, ref_2, ref_3;
+    for (ref_2 = 0, ref_3 = [1,2,3,4,5]; ref_2 < ref_3.length; ref_2++) {
+        item1 = ref_3[ref_2];
+        for (ref_0 = 0, ref_1 = [10,20,34]; ref_0 < ref_1.length; ref_0++) {
+            item2 = ref_1[ref_0];
+            console.log(item1, item2);
+        }
+    }
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
 # def test_basic_class():
 #     input = """
 #     class MyClass:
