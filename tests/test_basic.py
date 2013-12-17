@@ -299,7 +299,6 @@ def test_nested_for():
     }
     """
     compiled = compile(input)
-    print(compiled)
     assert compiled == norm(expected)
 
 # def test_basic_class():
@@ -310,5 +309,7 @@ def test_nested_for():
 #     """
 #
 #     expected = ""
+#     compiled = compile(input)
+#     print(compiled)
 #
-#     assert compile(input) == norm(expected)
+#     assert compiled == norm(expected)
