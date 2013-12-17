@@ -118,14 +118,14 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _translate_FunctionDef(self, node, childs):
         scope_var_statement = self._create_scope_var_statement()
-        arguments = childs[1:]
+        body_stmts = childs[1:]
 
         # Add scope var statement only if any var is defined
         if scope_var_statement:
-            arguments = [scope_var_statement] + arguments
+            body_stmts = [scope_var_statement] + body_stmts
 
         identifier = ecma_ast.Identifier(node.name)
-        func_expr = ecma_ast.FuncExpr(None, childs[0], arguments)
+        func_expr = ecma_ast.FuncExpr(None, childs[0], body_stmts)
         var_decl = ecma_ast.VarDecl(identifier, func_expr)
 
         # Drop inner scope (temporary is unused)
@@ -134,7 +134,14 @@ class TranslateVisitor(ast.NodeVisitor):
         if node.name not in self.scope:
             self.scope.set(node.name, identifier)
 
-        return ecma_ast.ExprStatement(var_decl)
+        expr_stmt = ecma_ast.ExprStatement(var_decl)
+
+        # Add fast link to func expression
+        # Usefull for class translations
+        expr_stmt._func_expr = func_expr
+        expr_stmt._func_expr._identifier = identifier
+
+        return expr_stmt
 
     def _translate_Lambda(self, node, childs):
         exprs = map(ecma_ast.ExprStatement, childs[1:])
@@ -312,3 +319,46 @@ class TranslateVisitor(ast.NodeVisitor):
         for_stmt = ecma_ast.For(init, cond, count, body_block)
 
         return for_stmt
+
+    def _translate_ClassDef(self, node, childs):
+        functions = list(map(lambda x: x._func_expr,
+                            filter(lambda x: hasattr(x, "_func_expr"), childs)))
+        childs = list(filter(lambda x: not hasattr(x, "_func_expr"), childs))
+
+        self.scope.new_scope()
+
+        inner_class_idf = self.get_unique_identifier("classref")
+
+        # Constructor
+        constructor_func_expr = ecma_ast.FuncExpr(None, None, None)
+        assign_expr = ecma_ast.Assign("=", inner_class_idf, constructor_func_expr)
+        constructor_expr = ecma_ast.ExprStatement(assign_expr)
+
+        body_stmts = [constructor_expr]
+
+        # Functions definition
+        for fn in functions:
+            fn_dt_prototype = ecma_ast.DotAccessor(inner_class_idf,
+                                                   ecma_ast.Identifier("prototype"))
+            fn_dt_attr = ecma_ast.DotAccessor(fn_dt_prototype, fn._identifier)
+            fn_assign_expr = ecma_ast.Assign("=", fn_dt_attr, fn)
+            fn_expr = ecma_ast.ExprStatement(fn_assign_expr)
+
+            body_stmts.append(fn_expr)
+
+        # Class closure
+        # Contains all class definition
+        scope_var_statement = self._create_scope_var_statement()
+        main_container_func = ecma_ast.FuncExpr(None, None, [scope_var_statement] + body_stmts)
+        main_container_func._parens = True
+        main_function_call = ecma_ast.FunctionCall(main_container_func)
+        main_identifier = ecma_ast.Identifier(node.name)
+        main_assign = ecma_ast.Assign("=", main_identifier, main_function_call)
+        main_expr = ecma_ast.ExprStatement(main_assign)
+
+        self.scope.drop_scope()
+
+        if node.name not in self.scope:
+            self.scope.set(node.name, main_identifier)
+
+        return main_expr
