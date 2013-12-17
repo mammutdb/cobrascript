@@ -303,6 +303,8 @@ class TranslateVisitor(ast.NodeVisitor):
         accesor = ecma_ast.BracketAccessor(iterable_idf, counter_idf)
         item_body_stmt = ecma_ast.ExprStatement(
                             ecma_ast.Assign("=", item_idf, accesor))
+        if item_idf.value not in self.scope:
+            self.scope.set(item_idf.value, item_idf)
 
         body_block = ecma_ast.Block([item_body_stmt, main_body_expr])
 

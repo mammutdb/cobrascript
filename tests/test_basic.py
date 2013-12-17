@@ -272,7 +272,7 @@ def test_basic_for():
     """
 
     expected = """
-    var ref_0, ref_1;
+    var item, ref_0, ref_1;
     for (ref_0 = 0, ref_1 = [1,2,3,4,5]; ref_0 < ref_1.length; ref_0++) {
         item = ref_1[ref_0];
         console.log(item);
