@@ -22,6 +22,9 @@ class TranslateVisitor(ast.NodeVisitor):
         self.indentation = 0
         self.debug = True
 
+        self.meta_module_as_closure = False
+        self.meta_global_object = None
+
     def print(self, *args, **kwargs):
         if self.debug:
             prefix = "    " * self.indentation
@@ -149,12 +152,42 @@ class TranslateVisitor(ast.NodeVisitor):
         return func_expr
 
     def _translate_Module(self, node, childs):
+        body_stmts = childs
+        global_stmt = None
+
+        if self.meta_global_object:
+            global_idf = ecma_ast.Identifier(self.meta_global_object)
+            self.scope.set(self.meta_global_object, global_idf)
+            global_assign = ecma_ast.Assign("=", global_idf, ecma_ast.Identifier("this"))
+            global_stmt = ecma_ast.ExprStatement(global_assign)
+
         scope_var_statement = self._create_scope_var_statement()
         self.scope.drop_scope()
 
+        if global_stmt:
+            body_stmts = [global_stmt] + body_stmts
+
         if scope_var_statement:
-            return ecma_ast.Program([scope_var_statement] + childs)
-        return ecma_ast.Program(childs)
+            body_stmts = [scope_var_statement] + body_stmts
+
+        if self.meta_module_as_closure:
+            main_container_func = ecma_ast.FuncExpr(None, None, body_stmts)
+            main_container_func._parens = True
+            main_function_call = ecma_ast.FunctionCall(main_container_func, [ecma_ast.This()])
+            main_expr = ecma_ast.ExprStatement(main_function_call)
+            return ecma_ast.Program([main_expr])
+
+        return ecma_ast.Program(body_stmts)
+
+    def _translate_Import(self, node, childs):
+        for child in childs:
+            if child["name"] == "_global":
+                self.meta_global_object = child["asname"] or child["name"]
+
+        return None
+
+    def _translate_alias(self, node, childs):
+        return node.__dict__
 
     def _translate_Expr(self, node, childs):
         return ecma_ast.ExprStatement(childs[0])
