@@ -72,6 +72,11 @@ class TranslateVisitor(ast.NodeVisitor):
         self.generic_visit(node)
         self.bin_op_stack.pop()
 
+    def visit_BoolOp(self, node):
+        self.bin_op_stack.push(node)
+        self.generic_visit(node)
+        self.bin_op_stack.pop()
+
     # Compile methods
 
     def _translate_node(self, node, childs):
@@ -87,6 +92,12 @@ class TranslateVisitor(ast.NodeVisitor):
         if not self.bin_op_stack.is_empty():
             n._parens = True
         return n
+
+    def _translate_BoolOp(self, node, childs):
+        binop = ecma_ast.BinOp(childs[0], childs[1], childs[2])
+        if not self.bin_op_stack.is_empty():
+            binop._parens = True
+        return binop
 
     def _translate_Num(self, node, childs):
         return ecma_ast.Number(str(node.n))
@@ -123,6 +134,12 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _translate_GtE(self, node, childs):
         return ">="
+
+    def _translate_And(self, node, childs):
+        return "&&"
+
+    def _translate_Or(self, node, childs):
+        return "||"
 
     def _translate_Return(self, node, childs):
         return ecma_ast.Return(childs[0])
