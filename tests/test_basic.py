@@ -377,6 +377,26 @@ def test_nested_while():
     compiled = compile(input)
     assert compiled == norm(expected)
 
+def test_basic_list_comprehensions():
+    input = """
+    count = [num for num in [1, 2, 3, 4]]
+    """
+
+    expected = """
+    var count;
+    count = (function() {
+        var _i, _len, _values, _results;
+        _values = [1,2,3,4];
+        _results = [];
+        for (_i = 0, _len = _values.length; _i < _len; _i++) {
+            _results.push(_values[_i])
+        }
+        return _results;
+    })();
+    """
+    compiled = compile(input)
+    assert compiled == norm(expected)
+
 # def test_basic_class():
 #     input = """
 #     class MyClass:
