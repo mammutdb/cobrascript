@@ -216,6 +216,12 @@ class TranslateVisitor(ast.NodeVisitor):
         if node.id == "None":
             return ecma_ast.Null(node.id)
 
+        elif node.id == "True":
+            return ecma_ast.Boolean("true")
+
+        elif node.id == "False":
+            return ecma_ast.Boolean("false")
+
         name = node.id
         return self.process_idf(ecma_ast.Identifier(name))
 
@@ -332,6 +338,13 @@ class TranslateVisitor(ast.NodeVisitor):
                 return identifier
 
         raise RuntimeError(":(")
+
+    def _translate_While(self, node, childs):
+        predicate = childs[0]
+        body = ecma_ast.Block(childs[1:])
+
+        while_stmt = ecma_ast.While(predicate, body)
+        return while_stmt
 
     def _translate_For(self, node, childs):
         counter_idf = self.get_unique_identifier()
