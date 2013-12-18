@@ -81,6 +81,19 @@ def test_none_assignation():
     assert compile(input) == norm(expected)
 
 
+def test_boolean_assignation():
+    input = """
+    x = True
+    y = False
+    """
+    expected = """
+    var x, y;
+    x = true;
+    y = false;
+    """
+    assert compile(input) == norm(expected)
+
+
 def test_simple_multiple_assignation():
     input = "x = y = 2"
     expected = """
@@ -319,6 +332,37 @@ def test_nested_for():
         for (ref_0 = 0, ref_1 = [10,20,34]; ref_0 < ref_1.length; ref_0++) {
             item2 = ref_1[ref_0];
             console.log(item1, item2);
+        }
+    }
+    """
+    compiled = compile(input)
+    assert compiled == norm(expected)
+
+def test_basic_while():
+    input = """
+    while True:
+        console.log("test")
+    """
+
+    expected = """
+    while (true) {
+        console.log("test");
+    }
+    """
+    assert compile(input) == norm(expected)
+
+
+def test_nested_while():
+    input = """
+    while True:
+        while True:
+            console.log("test")
+    """
+
+    expected = """
+    while (true) {
+        while (true) {
+            console.log("test");
         }
     }
     """
