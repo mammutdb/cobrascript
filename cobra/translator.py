@@ -363,6 +363,66 @@ class TranslateVisitor(ast.NodeVisitor):
         while_stmt = ecma_ast.While(predicate, body)
         return while_stmt
 
+    def _translate_ListComp(self, node, childs):
+        if len(node.generators) != 1:
+            raise RuntimeError("Only implemented 1 generator per comprehension")
+
+        generator = node.generators[0]
+        values = generator.iter
+        target = generator.target
+        expresion = childs
+
+        #if len(node.ifs) > 0:
+        #    raise RuntimeError("If not implemented yet")
+        # ifs = generator.ifs
+
+        counter_idf = ecma_ast.Identifier("_i")
+        len_idf = ecma_ast.Identifier("_len")
+        values_idf = ecma_ast.Identifier("_values")
+        results_idf = ecma_ast.Identifier("_results")
+
+        counter_var_decl = ecma_ast.VarDecl(counter_idf)
+        len_var_decl = ecma_ast.VarDecl(len_idf)
+        values_var_decl = ecma_ast.VarDecl(values_idf)
+        results_var_decl = ecma_ast.VarDecl(results_idf)
+
+        var_stmt = ecma_ast.VarStatement([counter_var_decl, len_var_decl, values_var_decl, results_var_decl])
+
+        initialize_values = ecma_ast.ExprStatement(ecma_ast.Assign("=", values_idf, self.translate(values)))
+        initialize_results = ecma_ast.ExprStatement(ecma_ast.Assign("=", results_idf, ecma_ast.Array([])))
+
+        # For init
+        init = ecma_ast.Comma(
+            ecma_ast.Assign("=", counter_idf, ecma_ast.Number("0")),
+            ecma_ast.Assign("=", len_idf, ecma_ast.DotAccessor(values_idf, ecma_ast.Identifier("length")))
+        )
+
+        # For condition
+        cond = ecma_ast.BinOp("<", counter_idf, len_idf)
+
+        # For count
+        count = ecma_ast.UnaryOp("++", counter_idf, postfix=True)
+
+        push_on_results = ecma_ast.FunctionCall(
+            ecma_ast.DotAccessor(results_idf, ecma_ast.Identifier("push")),
+            ecma_ast.ExprStatement(ecma_ast.BracketAccessor(values_idf, counter_idf))
+        )
+
+        for_loop_block = ecma_ast.Block([push_on_results])
+
+        for_stmt = ecma_ast.For(init, cond, count, for_loop_block)
+
+        return_results = ecma_ast.Return(results_idf)
+
+        func_block = ecma_ast.Block([var_stmt, initialize_values, initialize_results, for_stmt, return_results])
+
+        func_expr = ecma_ast.FuncExpr(None, None, func_block)
+        func_expr._parens = True
+
+        listcomp_stmt = ecma_ast.FunctionCall(func_expr)
+
+        return listcomp_stmt
+
     def _translate_For(self, node, childs):
         counter_idf = self.get_unique_identifier()
         iterable_idf = self.get_unique_identifier()
