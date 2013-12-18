@@ -107,6 +107,18 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_Eq(self, node, childs):
         return "==="
 
+    def _translate_Lt(self, node, childs):
+        return "<"
+
+    def _translate_LtE(self, node, childs):
+        return "<="
+
+    def _translate_Gt(self, node, childs):
+        return ">"
+
+    def _translate_GtE(self, node, childs):
+        return ">="
+
     def _translate_Return(self, node, childs):
         return ecma_ast.Return(childs[0])
 

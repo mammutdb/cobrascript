@@ -30,6 +30,30 @@ def test_basic_op_mod():
     assert compile("2 % 2") == "2 % 2;"
 
 
+def test_logic_equal():
+    assert compile("2 == 2") == "2 === 2;"
+
+
+def test_logic_gt():
+    assert compile("2 > 2") == "2 > 2;"
+
+
+def test_logic_gte():
+    assert compile("2 >= 2") == "2 >= 2;"
+
+
+def test_logic_lt():
+    assert compile("2 < 2") == "2 < 2;"
+
+
+def test_logic_lte():
+    assert compile("2 <= 2") == "2 <= 2;"
+
+
+def test_logic_is():
+    assert compile("2 is 2") == "2 === 2;"
+
+
 def test_simple_assignation():
     input = "x = 2"
     expected = """
