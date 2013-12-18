@@ -11,7 +11,7 @@ from . import ast as ecma_ast
 
 
 class TranslateVisitor(ast.NodeVisitor):
-    def __init__(self):
+    def __init__(self, module_as_closure=False, debug=True):
         super().__init__()
 
         self.level_stack = LeveledStack()
@@ -20,19 +20,18 @@ class TranslateVisitor(ast.NodeVisitor):
 
         self.references = defaultdict(lambda: 0)
         self.indentation = 0
-        self.debug = True
 
-        self.meta_module_as_closure = False
+        self.meta_debug = debug
+        self.meta_module_as_closure = module_as_closure
         self.meta_global_object = None
 
     def print(self, *args, **kwargs):
-        if self.debug:
+        if self.meta_debug:
             prefix = "    " * self.indentation
             print(prefix, *args, **kwargs)
 
     def translate(self, tree):
-        self.visit(tree, root=True)
-        return self.result
+        return self.visit(tree, root=True)
 
     def visit(self, node, root=False):
         self.level_stack.inc_level()
@@ -57,8 +56,7 @@ class TranslateVisitor(ast.NodeVisitor):
         if js_node is not None:
             self.level_stack.append(js_node)
 
-        if self.indentation == 0:
-            self.result = js_node
+        return js_node
 
     # Special visit fields
 
