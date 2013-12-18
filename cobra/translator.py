@@ -463,6 +463,39 @@ class TranslateVisitor(ast.NodeVisitor):
 
         return for_stmt
 
+    def _translate_Raise(self, node, childs):
+        return ecma_ast.Throw(childs[0])
+
+    def _translate_Try(self, node, childs):
+        fin_stmts = []
+        finally_node = None
+
+        if len(node.finalbody) > 0:
+            fin_stmts = childs[-len(node.finalbody):]
+            childs = childs[:-len(node.finalbody)]
+
+        catches_stmts = list(filter(lambda x: isinstance(x, ecma_ast.Catch), childs))
+
+        try_stmts = list(filter(lambda x: isinstance(x, ecma_ast.ExprStatement), childs))
+        catch_stmt = len(catches_stmts) > 0 and catches_stmts[0] or None
+
+        if len(fin_stmts) > 0:
+            fin_block = ecma_ast.Block(fin_stmts)
+            finally_node = ecma_ast.Finally(fin_block)
+
+        try_block = ecma_ast.Block(try_stmts)
+        try_node = ecma_ast.Try(try_block, catch=catch_stmt, fin=finally_node)
+        return try_node
+
+    def _translate_ExceptHandler(self, node, childs):
+        expr_stmts = list(filter(lambda x: isinstance(x, ecma_ast.ExprStatement), childs))
+
+        identifier = self.process_idf(ecma_ast.Identifier(node.name))
+        # identifiers = list(filter(lambda x: isinstance(x, ecma_ast.Identifier), childs))
+
+        block_stmt = ecma_ast.Block(expr_stmts)
+        return ecma_ast.Catch(identifier, block_stmt)
+
     def _translate_ClassDef(self, node, childs):
         functions = list(map(lambda x: x._func_expr,
                             filter(lambda x: hasattr(x, "_func_expr"), childs)))

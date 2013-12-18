@@ -397,6 +397,57 @@ def test_basic_list_comprehensions():
     compiled = compile(input)
     assert compiled == norm(expected)
 
+def test_exceptions_raise():
+    input = """
+    raise "sample exception"
+    """
+
+    expected = """
+    throw "sample exception";
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
+
+def test_exceptions_try_except():
+    input = """
+    try:
+        do_some_thing()
+    except Error as e:
+        do_some_thing_other()
+    """
+
+    expected = """
+    try {
+        do_some_thing();
+    } catch (e) {
+        do_some_thing_other();
+    }
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
+def test_exceptions_try_finally():
+    input = """
+    try:
+        do_some_thing()
+    finally:
+        do_some_thing_other()
+    """
+
+    expected = """
+    try {
+        do_some_thing();
+    } finally {
+        do_some_thing_other();
+    }
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
 # def test_basic_class():
 #     input = """
 #     class MyClass:
