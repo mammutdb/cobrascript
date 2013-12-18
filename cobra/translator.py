@@ -6,12 +6,13 @@ from collections import defaultdict
 from .utils import GenericStack
 from .utils import LeveledStack
 from .utils import ScopeStack
+from .utils import to_camel_case
 
 from . import ast as ecma_ast
 
 
 class TranslateVisitor(ast.NodeVisitor):
-    def __init__(self, module_as_closure=False, debug=True):
+    def __init__(self, module_as_closure=False, auto_camelcase=False, debug=True):
         super().__init__()
 
         self.level_stack = LeveledStack()
@@ -22,6 +23,7 @@ class TranslateVisitor(ast.NodeVisitor):
         self.indentation = 0
 
         self.meta_debug = debug
+        self.meta_auto_camelcase = auto_camelcase
         self.meta_module_as_closure = module_as_closure
         self.meta_global_object = None
 
@@ -32,6 +34,11 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def translate(self, tree):
         return self.visit(tree, root=True)
+
+    def process_idf(self, identifier):
+        if self.meta_auto_camelcase:
+            identifier.value = to_camel_case(identifier.value)
+        return identifier
 
     def visit(self, node, root=False):
         self.level_stack.inc_level()
@@ -137,7 +144,7 @@ class TranslateVisitor(ast.NodeVisitor):
         if scope_var_statement:
             body_stmts = [scope_var_statement] + body_stmts
 
-        identifier = ecma_ast.Identifier(node.name)
+        identifier = self.process_idf(ecma_ast.Identifier(node.name))
         func_expr = ecma_ast.FuncExpr(None, childs[0], body_stmts)
         var_decl = ecma_ast.VarDecl(identifier, func_expr)
 
@@ -166,7 +173,7 @@ class TranslateVisitor(ast.NodeVisitor):
         global_stmt = None
 
         if self.meta_global_object:
-            global_idf = ecma_ast.Identifier(self.meta_global_object)
+            global_idf = self.process_idf(ecma_ast.Identifier(self.meta_global_object))
             self.scope.set(self.meta_global_object, global_idf)
             global_assign = ecma_ast.Assign("=", global_idf, ecma_ast.Identifier("this"))
             global_stmt = ecma_ast.ExprStatement(global_assign)
@@ -208,10 +215,12 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_Name(self, node, childs):
         if node.id == "None":
             return ecma_ast.Null(node.id)
-        return ecma_ast.Identifier(node.id)
+
+        name = node.id
+        return self.process_idf(ecma_ast.Identifier(name))
 
     def _translate_arg(self, node, childs):
-        return ecma_ast.Identifier(node.arg)
+        return self.process_idf(ecma_ast.Identifier(node.arg))
 
     def _translate_Str(self, node, childs):
         return ecma_ast.String('"{}"'.format(node.s))
@@ -232,7 +241,7 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _translate_Attribute(self, node, childs):
         variable_identifier = childs[0]
-        attribute_access_identifier = ecma_ast.Identifier(node.attr)
+        attribute_access_identifier = self.process_idf(ecma_ast.Identifier(node.attr))
         dotaccessor = ecma_ast.DotAccessor(variable_identifier, attribute_access_identifier)
         return dotaccessor
 
@@ -279,7 +288,7 @@ class TranslateVisitor(ast.NodeVisitor):
         values = childs[msize:]
 
         for key, value in zip(keys, values):
-            identifier = ecma_ast.Identifier(key.value)
+            identifier = self.process_idf(ecma_ast.Identifier(key.value))
             assign_instance = ecma_ast.Assign(":", identifier, value)
             properties.append(assign_instance)
 
@@ -318,7 +327,7 @@ class TranslateVisitor(ast.NodeVisitor):
         for i in range(100000000):
             candidate = "{}_{}".format(prefix, i)
             if candidate not in self.scope:
-                identifier = ecma_ast.Identifier(candidate)
+                identifier = self.process_idf(ecma_ast.Identifier(candidate))
                 self.scope.set(candidate, identifier)
                 return identifier
 
@@ -398,7 +407,7 @@ class TranslateVisitor(ast.NodeVisitor):
         main_container_func = ecma_ast.FuncExpr(None, None, [scope_var_statement] + body_stmts)
         main_container_func._parens = True
         main_function_call = ecma_ast.FunctionCall(main_container_func)
-        main_identifier = ecma_ast.Identifier(node.name)
+        main_identifier = self.process_idf(ecma_ast.Identifier(node.name))
         main_assign = ecma_ast.Assign("=", main_identifier, main_function_call)
         main_expr = ecma_ast.ExprStatement(main_assign)
 
