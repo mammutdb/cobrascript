@@ -264,9 +264,10 @@ class TranslateVisitor(ast.NodeVisitor):
         node_identifier = childs[0]
         expr_identifier = childs[1]
 
-        if node_identifier.value not in self.scope:
-            raise RuntimeError("undefined variable {} at line {}".format(node_identifier.value,
-                                                                         node.lineno))
+        # FIXME: convert to warning.
+        # if node_identifier.value not in self.scope:
+        #     raise RuntimeError("undefined variable {} at line {}".format(node_identifier.value,
+        #                                                                  node.lineno))
         return ecma_ast.BracketAccessor(node_identifier, expr_identifier)
 
     def _translate_List(self, node, childs):
