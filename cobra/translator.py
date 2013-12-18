@@ -390,6 +390,8 @@ class TranslateVisitor(ast.NodeVisitor):
 
             body_stmts.append(fn_expr)
 
+        body_stmts.append(ecma_ast.Return(inner_class_idf))
+
         # Class closure
         # Contains all class definition
         scope_var_statement = self._create_scope_var_statement()
