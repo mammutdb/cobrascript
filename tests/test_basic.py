@@ -582,6 +582,17 @@ def test_new_import_and_try_overwrite():
     with pytest.raises(RuntimeError):
         compiled = compile(input)
 
+def test_auto_camel_case():
+    input = """
+    xx = foo_bar()
+    """
+
+    expected = """
+    var xx;
+    xx = fooBar();
+    """
+    compiled = compile(input, translate_options={"auto_camelcase": True})
+    assert compiled == norm(expected)
 # def test_basic_class():
 #     input = """
 #     class MyClass:
