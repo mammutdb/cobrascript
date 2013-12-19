@@ -234,9 +234,12 @@ class TranslateVisitor(ast.NodeVisitor):
             body_stmts = [scope_var_statement] + body_stmts
 
         if self.meta_module_as_closure:
-            main_container_func = ecma_ast.FuncExpr(None, None, body_stmts)
-            main_container_func._parens = True
-            main_function_call = ecma_ast.FunctionCall(main_container_func, [ecma_ast.This()])
+            container_func_expr = ecma_ast.FuncExpr(None, None, body_stmts)
+            container_func_expr._parens = True
+            dotaccessor_func_expr = ecma_ast.DotAccessor(container_func_expr,
+                                                         ecma_ast.Identifier("call"))
+
+            main_function_call = ecma_ast.FunctionCall(dotaccessor_func_expr, [ecma_ast.This()])
             main_expr = ecma_ast.ExprStatement(main_function_call)
             return ecma_ast.Program([main_expr])
 

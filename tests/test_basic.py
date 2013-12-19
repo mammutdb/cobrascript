@@ -593,6 +593,21 @@ def test_auto_camel_case():
     """
     compiled = compile(input, translate_options={"auto_camelcase": True})
     assert compiled == norm(expected)
+
+
+def test_module_as_closure():
+    input = """
+    xx = foo_bar()
+    """
+
+    expected = """
+    (function() {
+        var xx;
+        xx = foo_bar();
+    }).call(this);
+    """
+    compiled = compile(input, translate_options={"module_as_closure": True})
+    assert compiled == norm(expected)
 # def test_basic_class():
 #     input = """
 #     class MyClass:
