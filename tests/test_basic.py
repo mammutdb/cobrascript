@@ -73,7 +73,7 @@ def test_delete_expr():
     assert compile(input) == norm(expected)
 
 
-def test_delete_expr():
+def test_delete_expr_multiple():
     input = """
     del x, y
     """

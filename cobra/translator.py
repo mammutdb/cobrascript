@@ -160,6 +160,8 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_Delete(self, node, childs):
         deletes = []
         for child in childs:
+            if child.value not in self.scope:
+                self.scope.set(child.value, child)
             deletes.append(ecma_ast.ExprStatement(ecma_ast.UnaryOp('delete', child)))
         return ecma_ast.SetOfNodes(deletes)
 
