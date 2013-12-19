@@ -34,6 +34,10 @@ def test_logic_equal():
     assert compile("2 == 2") == "2 === 2;"
 
 
+def test_logic_not_equal():
+    assert compile("2 != 2") == "2 !== 2;"
+
+
 def test_logic_gt():
     assert compile("2 > 2") == "2 > 2;"
 
@@ -107,6 +111,25 @@ def test_simple_multiple_assignation():
     expected = """
     var x, y;
     x = y = 2;
+    """
+    assert compile(input) == norm(expected)
+
+
+def test_assignation_with_operation():
+    input = """
+    x = 0
+    x += 2
+    x -= 2
+    x /= 2
+    x *= 2
+    """
+    expected = """
+    var x;
+    x = 0;
+    x += 2;
+    x -= 2;
+    x /= 2;
+    x *= 2;
     """
     assert compile(input) == norm(expected)
 

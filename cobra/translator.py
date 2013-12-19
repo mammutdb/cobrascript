@@ -271,6 +271,24 @@ class TranslateVisitor(ast.NodeVisitor):
         dotaccessor = ecma_ast.DotAccessor(variable_identifier, attribute_access_identifier)
         return dotaccessor
 
+    def _translate_AugAssign(self, node, childs):
+        target = childs[0]
+        op = childs[1]
+        value = childs[2]
+
+        assign_decl = None
+
+        if isinstance(target, ecma_ast.Identifier):
+            if target.value not in self.scope:
+                self.scope.set(target.value, target)
+
+        if assign_decl is None:
+            assign_decl = ecma_ast.Assign(op + "=", target, value)
+        else:
+            assign_decl = ecma_ast.Assign(op + "=", target, assign_decl)
+
+        return ecma_ast.ExprStatement(assign_decl)
+
     def _translate_Assign(self, node, childs):
         identifiers = childs[:-1]
         value = childs[-1]
@@ -288,6 +306,7 @@ class TranslateVisitor(ast.NodeVisitor):
                 assign_decl = ecma_ast.Assign("=", target, assign_decl)
 
         return ecma_ast.ExprStatement(assign_decl)
+
 
     def _translate_Index(self, node, childs):
         # FIXME: seems to be incomplete
