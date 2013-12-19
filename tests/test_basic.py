@@ -826,3 +826,41 @@ def test_continue():
     compiled = compile(input)
     print(compiled)
     assert compiled == norm(expected)
+
+def test_simple_slice():
+    input = """
+    testList[1:5]
+    """
+
+    expected = """
+    testList.slice(1, 5);
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
+def test_partial_slices():
+    input = """
+    testList[1:]
+    testList[:5]
+    """
+
+    expected = """
+    testList.slice(1);
+    testList.slice(0, 5);
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
+def test_negative_slices():
+    input = """
+    testList[1:-1]
+    """
+
+    expected = """
+    testList.slice(1, -1);
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)

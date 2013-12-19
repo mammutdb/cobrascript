@@ -408,13 +408,35 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _translate_Subscript(self, node, childs):
         node_identifier = childs[0]
-        expr_identifier = childs[1]
 
-        # FIXME: convert to warning.
-        # if node_identifier.value not in self.scope:
-        #     raise RuntimeError("undefined variable {} at line {}".format(node_identifier.value,
-        #                                                                  node.lineno))
-        return ecma_ast.BracketAccessor(node_identifier, expr_identifier)
+        if hasattr(node.slice, 'lower') or hasattr(node.slice, 'upper') or hasattr(node.slice, 'step'):
+            if hasattr(node.slice, 'step') and node.slice.step:
+                raise NotImplementedError(":D")
+
+            slice_values = []
+            if hasattr(node.slice, 'lower') and node.slice.lower:
+                slice_values.append(self.translate(node.slice.lower))
+            else:
+                slice_values.append(ecma_ast.Number("0"))
+
+            if hasattr(node.slice, 'upper') and node.slice.upper:
+                slice_values.append(self.translate(node.slice.upper))
+
+            return ecma_ast.FunctionCall(
+                ecma_ast.DotAccessor(
+                    node_identifier,
+                    ecma_ast.Identifier("slice")
+                ),
+                slice_values
+            )
+        else:
+            expr_identifier = childs[1]
+
+            # FIXME: convert to warning.
+            # if node_identifier.value not in self.scope:
+            #     raise RuntimeError("undefined variable {} at line {}".format(node_identifier.value,
+            #                                                                  node.lineno))
+            return ecma_ast.BracketAccessor(node_identifier, expr_identifier)
 
     def _translate_List(self, node, childs):
         return ecma_ast.Array(childs)
