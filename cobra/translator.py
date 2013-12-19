@@ -147,12 +147,12 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_Return(self, node, childs):
         return ecma_ast.Return(childs[0])
 
-    def _create_scope_var_statement(self):
-        scope_identifiers = list(self.scope.first().values())
+    def _create_scope_var_statement(self, root=False):
+        scope_identifiers = self.scope.get_scope_identifiers(root=root)
+
         if len(scope_identifiers) == 0:
             return None
 
-        scope_identifiers = sorted(scope_identifiers, key=lambda x: x.value)
         scope_var_decls = list(map(lambda x: ecma_ast.VarDecl(x), scope_identifiers))
         return ecma_ast.VarStatement(scope_var_decls)
 

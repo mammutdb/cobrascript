@@ -87,7 +87,11 @@ class ScopeStack(object):
     def drop_scope(self):
         self.data = self.data.parents
 
-    def first(self):
-        if len(self.data.maps) == 0:
-            return {}
-        return self.data.maps[0]
+    def get_scope_identifiers(self, root=False):
+        first_level = self.data.maps[0] if len(self.data.maps) > 0 else {}
+        merged_stmts = list(first_level.values())
+
+        if root:
+            merged_stmts = list(self.special_forms.values) + merged_stmts
+
+        return sorted(merged_stmts, key=lambda x: x.value)
