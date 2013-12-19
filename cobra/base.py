@@ -63,7 +63,7 @@ def _compile_files(paths:list, join=False, translate_options=None, compile_optio
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="cobra-script",
+    parser = argparse.ArgumentParser(prog="cobrascript",
                                      description="Python to Javascript translator.")
     parser.add_argument("files", metavar="input.py", type=str, nargs="+",
                         help="A list of python files for translate.")
