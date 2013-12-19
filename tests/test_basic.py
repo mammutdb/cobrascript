@@ -151,6 +151,7 @@ def test_assignation_with_operation():
     x -= 2
     x /= 2
     x *= 2
+    x %= 2
     """
     expected = """
     var x;
@@ -159,6 +160,7 @@ def test_assignation_with_operation():
     x -= 2;
     x /= 2;
     x *= 2;
+    x %= 2;
     """
     assert compile(input) == norm(expected)
 

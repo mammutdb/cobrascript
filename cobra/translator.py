@@ -320,8 +320,10 @@ class TranslateVisitor(ast.NodeVisitor):
         target = childs[0]
         op = childs[1]
         value = childs[2]
-
         assign_decl = None
+
+        if op not in ["+", "-", "*", "/", "%"]:
+            raise NotImplementedError(":D")
 
         if isinstance(target, ecma_ast.Identifier):
             if target.value not in self.scope:
