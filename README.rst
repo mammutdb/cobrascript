@@ -58,6 +58,33 @@ Javascript:
     somenumber = 22;
     some_string = "Hello";
 
+
+Lists & Dicts
+~~~~~~~~~~~~~
+
+CobraScript/Python:
+
+.. code-block:: python
+
+    mylist = [1, 2, 3, 4]
+
+    mydict = {
+        "foo": 1,
+        "bar": [2,3,4]
+    }
+
+Javascript:
+
+.. code-block:: js
+
+    var mylist, mydict;
+
+    mydict = {
+        "foo": 1,
+        "bar": [1,2,3]
+    }
+
+
 Functions & Lambdas
 ~~~~~~~~~~~~~~~~~~~
 
@@ -84,3 +111,71 @@ Javascript:
         return 2;
     }
 
+
+If, Elif and Else
+~~~~~~~~~~~~~~~~~
+
+CobraScript/Python:
+
+.. code-block:: python
+
+    if x > y:
+        return x
+    elif x < y:
+        return y
+    else:
+        return 0
+
+Javascript:
+
+.. code-block:: js
+
+    if (x > y) {
+        return x;
+    } else if (x < y) {
+        return y;
+    } else {
+        return 0;
+    }
+
+
+For loop
+~~~~~~~~
+
+CobraScript/Python:
+
+.. code-block:: python
+
+    for item in [1,2,3,4,5]:
+        console.log(item)
+
+Javascript:
+
+.. code-block:: js
+
+    var item, ref_0, ref_1;
+    for (ref_0 = 0, ref_1 = [1,2,3,4,5]; ref_0 < ref_1.length; ref_0++) {
+        item = ref_1[ref_0];
+        console.log(item);
+    }
+
+
+Operators
+~~~~~~~~~
+
+This is a equivalence table between python operators and translated
+javascript operators:
+
++-------------+------------+
+| CobraScript | JavaScript |
++=============+============+
+| ``is``      | ``===``    |
++-------------+------------+
+| ``==``      | ``===``    |
++-------------+------------+
+| ``!=``      | ``!==``    |
++-------------+------------+
+| ``and``     | ``&&``     |
++-------------+------------+
+| ``or``      | ``||``     |
++-------------+------------+
