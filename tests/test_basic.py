@@ -656,6 +656,17 @@ def test_dict_access():
     compiled = compile(input)
     assert compiled == norm(expected)
 
+def test_empty_return():
+    input = """
+    return
+    """
+
+    expected = """
+    return;
+    """
+    compiled = compile(input)
+    assert compiled == norm(expected)
+
 def test_basic_class():
     input = """
     class MyClass:
