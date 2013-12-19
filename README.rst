@@ -78,7 +78,7 @@ Javascript:
 .. code-block:: js
 
     var mylist, mydict;
-
+    mylist = [1,2,3,4];
     mydict = {
         "foo": 1,
         "bar": [1,2,3]
