@@ -62,6 +62,29 @@ def test_logic_nested_expr():
     assert compile("True and (False or True)") == "true && (false || true);"
 
 
+def test_delete_expr():
+    input = """
+    del x
+    """
+    expected = """
+    var x;
+    delete x;
+    """
+    assert compile(input) == norm(expected)
+
+
+def test_delete_expr():
+    input = """
+    del x, y
+    """
+    expected = """
+    var x, y;
+    delete x;
+    delete y;
+    """
+    assert compile(input) == norm(expected)
+
+
 def test_list_expr():
     input = """
     [1, 2, 3]

@@ -25,10 +25,6 @@
 __author__ = 'Ruslan Spivak <ruslan.spivak@gmail.com>'
 
 
-class SetOfNodes(list):
-    pass
-
-
 class Node(object):
     def __init__(self, children=None):
         self._children_list = [] if children is None else children
@@ -47,6 +43,9 @@ class Node(object):
         from cobra.compiler import ECMAVisitor
         visitor = ECMAVisitor()
         return visitor.visit(self)
+
+class SetOfNodes(Node):
+    pass
 
 class Program(Node):
     pass

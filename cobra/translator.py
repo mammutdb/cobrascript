@@ -157,6 +157,12 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_Or(self, node, childs):
         return "||"
 
+    def _translate_Delete(self, node, childs):
+        deletes = []
+        for child in childs:
+            deletes.append(ecma_ast.ExprStatement(ecma_ast.UnaryOp('delete', child)))
+        return ecma_ast.SetOfNodes(deletes)
+
     def _translate_Return(self, node, childs):
         if childs:
             return ecma_ast.Return(childs[0])
