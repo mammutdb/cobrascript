@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# import sys
-# sys.path.insert(0, "..")
-# print(sys.path)
-
-import unittest
+import pytest
 
 from cobra.base import compile
 from .utils import norm
@@ -500,7 +496,6 @@ def test_multiple_conditional_list_comprehensions():
     })();
     """
     compiled = compile(input)
-    print(compiled)
     assert compiled == norm(expected)
 
 
@@ -520,7 +515,6 @@ def test_exceptions_try_except():
     }
     """
     compiled = compile(input)
-    print(compiled)
     assert compiled == norm(expected)
 
 
@@ -540,7 +534,6 @@ def test_exceptions_try_finally():
     }
     """
     compiled = compile(input)
-    print(compiled)
     assert compiled == norm(expected)
 
 def test_global_import():
@@ -556,6 +549,38 @@ def test_global_import():
     print(compiled)
     assert compiled == norm(expected)
 
+
+def test_global_import_and_try_overwrite():
+    input = """
+    import _global as g
+    g = 2
+    """
+
+    with pytest.raises(RuntimeError):
+        compiled = compile(input)
+
+def test_new_import():
+    input = """
+    import _new as new
+    """
+
+    expected = """
+    var new;
+    new = function(_class) { var ___args_array = Array.apply(null, arguments); var ___clazz = ___args_array.slice(0, 1)[0]; var ___args = ___args_array.slice(1); var ___constructor = ___clazz; function Fake() { ___constructor.apply(this, ___args); } Fake.prototype = ___constructor.prototype; return new Fake();};
+    """
+
+    compiled = compile(input)
+    assert compiled == norm(expected)
+
+
+def test_new_import_and_try_overwrite():
+    input = """
+    import _new as new
+    new = 2
+    """
+
+    with pytest.raises(RuntimeError):
+        compiled = compile(input)
 
 # def test_basic_class():
 #     input = """
