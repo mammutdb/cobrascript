@@ -95,6 +95,8 @@ class TranslateVisitor(ast.NodeVisitor):
             operator = "-"
         elif type(node.op) == ast.UAdd:
             operator = "+"
+        elif type(node.op) == ast.Not:
+            operator = "!"
         else:
             raise NotImplementedError(":D")
 

@@ -54,6 +54,10 @@ def test_logic_is():
     assert compile("2 is 2") == "2 === 2;"
 
 
+def test_logic_not():
+    assert compile("not True") == "!true;"
+
+
 def test_logic_expr():
     assert compile("True and False") == "true && false;"
 
