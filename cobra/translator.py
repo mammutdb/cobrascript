@@ -365,21 +365,40 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _translate_AugAssign(self, node, childs):
         target = childs[0]
-        op = childs[1]
-        value = childs[2]
         assign_decl = None
-
-        if op not in ["+", "-", "*", "/", "%"]:
-            raise NotImplementedError(":D")
-
-        if isinstance(target, ecma_ast.Identifier):
-            if target.value not in self.scope:
-                self.scope.set(target.value, target)
-
-        if assign_decl is None:
-            assign_decl = ecma_ast.Assign(op + "=", target, value)
+        if type(node.op) == ast.Pow or type(node.op) == ast.FloorDiv:
+            if type(node.op) == ast.Pow:
+                n = ecma_ast.FunctionCall(
+                    ecma_ast.DotAccessor(
+                        ecma_ast.Identifier("Math"),
+                        ecma_ast.Identifier("pow")
+                    ),
+                    [childs[0], childs[1]]
+                )
+            elif type(node.op) == ast.FloorDiv:
+                n = ecma_ast.FunctionCall(
+                    ecma_ast.DotAccessor(
+                        ecma_ast.Identifier("Math"),
+                        ecma_ast.Identifier("floor")
+                    ),
+                    [ecma_ast.BinOp("/", childs[0], childs[1])]
+                )
+            assign_decl = ecma_ast.Assign("=", target, n)
         else:
-            assign_decl = ecma_ast.Assign(op + "=", target, assign_decl)
+            op = childs[1]
+            value = childs[2]
+
+            if op not in ["+", "-", "*", "/", "%"]:
+                raise NotImplementedError(":D")
+
+            if isinstance(target, ecma_ast.Identifier):
+                if target.value not in self.scope:
+                    self.scope.set(target.value, target)
+
+            if assign_decl is None:
+                assign_decl = ecma_ast.Assign(op + "=", target, value)
+            else:
+                assign_decl = ecma_ast.Assign(op + "=", target, assign_decl)
 
         return ecma_ast.ExprStatement(assign_decl)
 
