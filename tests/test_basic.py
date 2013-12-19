@@ -667,6 +667,22 @@ def test_empty_return():
     compiled = compile(input)
     assert compiled == norm(expected)
 
+
+def test_this_assignation():
+    input = """
+    def person(name):
+        this.name = name
+    """
+
+    expected = """
+    var person;
+    person = function(name) {
+        this.name = name;
+    };
+    """
+    compiled = compile(input)
+    assert compiled == norm(expected)
+
 def test_basic_class():
     input = """
     class MyClass:
