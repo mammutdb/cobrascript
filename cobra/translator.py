@@ -103,9 +103,26 @@ class TranslateVisitor(ast.NodeVisitor):
         return ecma_ast.UnaryOp(operator, childs[0], postfix=False)
 
     def _translate_BinOp(self, node, childs):
-        n = ecma_ast.BinOp(childs[1], childs[0], childs[2])
-        if not self.bin_op_stack.is_empty():
-            n._parens = True
+        if type(node.op) == ast.Pow:
+            n = ecma_ast.FunctionCall(
+                ecma_ast.DotAccessor(
+                    ecma_ast.Identifier("Math"),
+                    ecma_ast.Identifier("pow")
+                ),
+                [childs[0], childs[1]]
+            )
+        elif type(node.op) == ast.FloorDiv:
+            n = ecma_ast.FunctionCall(
+                ecma_ast.DotAccessor(
+                    ecma_ast.Identifier("Math"),
+                    ecma_ast.Identifier("floor")
+                ),
+                [ecma_ast.BinOp("/", childs[0], childs[1])]
+            )
+        else:
+            n = ecma_ast.BinOp(childs[1], childs[0], childs[2])
+            if not self.bin_op_stack.is_empty():
+                n._parens = True
         return n
 
     def _translate_BoolOp(self, node, childs):

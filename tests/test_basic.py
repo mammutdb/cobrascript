@@ -26,6 +26,14 @@ def test_basic_op_mod():
     assert compile("2 % 2") == "2 % 2;"
 
 
+def test_basic_op_mod():
+    assert compile("3 ** 2") == "Math.pow(3, 2);"
+
+
+def test_basic_op_mod():
+    assert compile("3 // 2") == "Math.floor(3 / 2);"
+
+
 def test_logic_equal():
     assert compile("2 == 2") == "2 === 2;"
 
