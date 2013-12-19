@@ -608,15 +608,39 @@ def test_module_as_closure():
     """
     compiled = compile(input, translate_options={"module_as_closure": True})
     assert compiled == norm(expected)
-# def test_basic_class():
-#     input = """
-#     class MyClass:
-#         def foo(self):
-#             return 2
-#     """
-#
-#     expected = ""
-#     compiled = compile(input)
-#     print(compiled)
-#
-#     assert compiled == norm(expected)
+
+def test_dict_access():
+    input = """
+    xx = foo["22"]
+    """
+
+    expected = """
+    var xx;
+    xx = foo["22"];
+    """
+    compiled = compile(input)
+    assert compiled == norm(expected)
+
+def test_basic_class():
+    input = """
+    class MyClass:
+        def foo(self):
+            return 2
+    """
+
+    expected = """
+    var MyClass, foo;
+    MyClass = (function() {
+        var classref_0;
+        classref_0 = function() {
+
+        };
+        classref_0.prototype.foo = function(self) {
+            return 2;
+        };
+        return classref_0;
+    })();
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)

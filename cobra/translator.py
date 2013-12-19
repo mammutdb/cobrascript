@@ -408,8 +408,6 @@ class TranslateVisitor(ast.NodeVisitor):
                 self.scope.set(candidate, identifier)
                 return identifier
 
-        raise RuntimeError(":(")
-
     def _translate_While(self, node, childs):
         predicate = childs[0]
 
