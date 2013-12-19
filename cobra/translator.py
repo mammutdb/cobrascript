@@ -97,6 +97,8 @@ class TranslateVisitor(ast.NodeVisitor):
             operator = "+"
         elif type(node.op) == ast.Not:
             operator = "!"
+        elif type(node.op) == ast.Invert:
+            operator = "~"
         else:
             raise NotImplementedError(":D")
 
@@ -119,6 +121,16 @@ class TranslateVisitor(ast.NodeVisitor):
                 ),
                 [ecma_ast.BinOp("/", childs[0], childs[1])]
             )
+        elif type(node.op) == ast.BitOr:
+            n = ecma_ast.BinOp("|", childs[0], childs[1])
+        elif type(node.op) == ast.BitAnd:
+            n = ecma_ast.BinOp("&", childs[0], childs[1])
+        elif type(node.op) == ast.BitXor:
+            n = ecma_ast.BinOp("^", childs[0], childs[1])
+        elif type(node.op) == ast.LShift:
+            n = ecma_ast.BinOp("<<", childs[0], childs[1])
+        elif type(node.op) == ast.RShift:
+            n = ecma_ast.BinOp(">>", childs[0], childs[1])
         else:
             n = ecma_ast.BinOp(childs[1], childs[0], childs[2])
             if not self.bin_op_stack.is_empty():

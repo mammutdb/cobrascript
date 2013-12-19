@@ -26,6 +26,34 @@ def test_basic_op_mod():
     assert compile("2 % 2") == "2 % 2;"
 
 
+def test_basic_op_bitwise_and():
+    assert compile("2 & 2") == "2 & 2;"
+
+
+def test_basic_op_bitwise_or():
+    assert compile("2 | 2") == "2 | 2;"
+
+
+def test_basic_op_bitwise_xor():
+    assert compile("2 ^ 2") == "2 ^ 2;"
+
+
+def test_basic_op_bitwise_not():
+    assert compile("~2") == "~2;"
+
+
+def test_basic_op_bitwise_shifts():
+    input = """
+    2 << 2
+    2 >> 2
+    """
+    expected = """
+    2 << 2;
+    2 >> 2;
+    """
+    assert compile(input) == norm(expected)
+
+
 def test_basic_op_mod():
     assert compile("3 ** 2") == "Math.pow(3, 2);"
 
