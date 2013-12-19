@@ -543,6 +543,20 @@ def test_exceptions_try_finally():
     print(compiled)
     assert compiled == norm(expected)
 
+def test_global_import():
+    input = """
+    import _global as g
+    """
+
+    expected = """
+    var g;
+    g = this;
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
+
 # def test_basic_class():
 #     input = """
 #     class MyClass:

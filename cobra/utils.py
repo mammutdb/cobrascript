@@ -99,7 +99,7 @@ class ScopeStack(object):
         merged_stmts = list(first_level.values())
 
         if root:
-            merged_stmts = list(self.special_forms.values) + merged_stmts
+            merged_stmts = list(self.special_forms.values()) + merged_stmts
 
         return sorted(merged_stmts, key=lambda x: x.value)
 

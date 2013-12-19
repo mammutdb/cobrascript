@@ -227,7 +227,7 @@ class TranslateVisitor(ast.NodeVisitor):
             new_stmt = ecma_ast.ExprStatement(new_assign)
             body_stmts = [new_stmt] + body_stmts
 
-        scope_var_statement = self._create_scope_var_statement()
+        scope_var_statement = self._create_scope_var_statement(root=True)
         self.scope.drop_scope()
 
         if scope_var_statement:
