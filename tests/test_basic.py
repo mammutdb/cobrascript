@@ -377,6 +377,29 @@ def test_nested_while():
     compiled = compile(input)
     assert compiled == norm(expected)
 
+def test_while_else():
+    input = """
+    while my_var:
+        console.log("test")
+    else:
+        console.log("test else")
+    """
+
+    expected = """
+    var ref_0;
+    ref_0 = true;
+    while (my_var) {
+        ref_0 = false;
+        console.log("test");
+    }
+    if (ref_0) {
+        console.log("test else");
+    }
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
 def test_basic_list_comprehensions():
     input = """
     count = [num for num in [1, 2, 3, 4]]

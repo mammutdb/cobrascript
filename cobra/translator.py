@@ -361,9 +361,27 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _translate_While(self, node, childs):
         predicate = childs[0]
-        body = ecma_ast.Block(childs[1:])
 
-        while_stmt = ecma_ast.While(predicate, body)
+        # consecuent
+        body_blocks_size = len(node.body)
+        body = childs[1:body_blocks_size+1]
+
+        else_body = None
+        if node.orelse:
+            else_condition_idf = self.get_unique_identifier()
+            else_body = childs[body_blocks_size+1:]
+
+        if else_body is None:
+            while_stmt = ecma_ast.While(predicate, ecma_ast.Block(body))
+        else:
+            initialize_condition = ecma_ast.ExprStatement(ecma_ast.Assign("=", else_condition_idf, ecma_ast.Boolean("true")))
+            while_body = ecma_ast.Block([
+                ecma_ast.ExprStatement(ecma_ast.Assign("=", else_condition_idf, ecma_ast.Boolean("false")))
+            ] + body)
+            while_sentence = ecma_ast.While(predicate, while_body)
+            else_sentence = ecma_ast.If(else_condition_idf, ecma_ast.Block(else_body))
+            while_stmt = ecma_ast.SetOfNodes([initialize_condition, while_sentence, else_sentence])
+
         return while_stmt
 
     def _translate_ListComp(self, node, childs):

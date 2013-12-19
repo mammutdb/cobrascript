@@ -4,6 +4,7 @@ import textwrap
 
 from collections import defaultdict
 from collections import ChainMap
+from cobra.ast import SetOfNodes
 
 
 def normalize(data:str):
@@ -58,7 +59,10 @@ class LeveledStack(object):
             raise RuntimeError("invalid stack level")
 
     def append(self, value):
-        self.data[self.level].append(value)
+        if type(value) == SetOfNodes:
+            self.data[self.level] += value
+        else:
+            self.data[self.level].append(value)
 
     def get_value(self):
         return self.data[self.level]
