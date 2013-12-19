@@ -247,18 +247,10 @@ class TranslateVisitor(ast.NodeVisitor):
             self.scope.set(self.meta_global_new, new_idf, special_form=True)
 
             raw_new_js = """
-            function(_class) {
+            function() {
                 var ___args_array = Array.apply(null, arguments);
                 var ___clazz = ___args_array.slice(0, 1)[0];
-                var ___args = ___args_array.slice(1);
-                var ___constructor = ___clazz;
-
-                function Fake() {
-                    ___constructor.apply(this, ___args);
-                }
-
-                Fake.prototype = ___constructor.prototype;
-                return new Fake();
+                return new (___clazz.bind.apply(___clazz, ___args_array))();
             }"""
 
             normalized_new_js = "".join(normalize(raw_new_js).split("\n"))

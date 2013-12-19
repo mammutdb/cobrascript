@@ -619,12 +619,12 @@ def test_global_import_and_try_overwrite():
 
 def test_new_import():
     input = """
-    import _new as new
+    import _new as new_instance
     """
 
     expected = """
-    var new;
-    new = function(_class) { var ___args_array = Array.apply(null, arguments); var ___clazz = ___args_array.slice(0, 1)[0]; var ___args = ___args_array.slice(1); var ___constructor = ___clazz; function Fake() { ___constructor.apply(this, ___args); } Fake.prototype = ___constructor.prototype; return new Fake();};
+    var new_instance;
+    new_instance = function() { var ___args_array = Array.apply(null, arguments); var ___clazz = ___args_array.slice(0, 1)[0]; return new (___clazz.bind.apply(___clazz, ___args_array))();};
     """
 
     compiled = compile(input)
