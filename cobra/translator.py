@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import ast
+import re
 from collections import defaultdict
 
 from .utils import GenericStack
 from .utils import LeveledStack
 from .utils import ScopeStack
 from .utils import to_camel_case
+from .utils import normalize
 
 from . import ast as ecma_ast
 
@@ -26,6 +28,7 @@ class TranslateVisitor(ast.NodeVisitor):
         self.meta_auto_camelcase = auto_camelcase
         self.meta_module_as_closure = module_as_closure
         self.meta_global_object = None
+        self.meta_global_new = None
 
     def print(self, *args, **kwargs):
         if self.meta_debug:
@@ -190,19 +193,42 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _translate_Module(self, node, childs):
         body_stmts = childs
-        global_stmt = None
 
         if self.meta_global_object:
             global_idf = self.process_idf(ecma_ast.Identifier(self.meta_global_object))
-            self.scope.set(self.meta_global_object, global_idf)
+            self.scope.set(self.meta_global_object, global_idf, special_form=True)
             global_assign = ecma_ast.Assign("=", global_idf, ecma_ast.Identifier("this"))
             global_stmt = ecma_ast.ExprStatement(global_assign)
+            body_stmts = [global_stmt] + body_stmts
+
+        if self.meta_global_new:
+            new_idf = self.process_idf(ecma_ast.Identifier(self.meta_global_new))
+            self.scope.set(self.meta_global_new, new_idf, special_form=True)
+
+            raw_new_js = """
+            function(_class) {
+                var ___args_array = Array.apply(null, arguments);
+                var ___clazz = ___args_array.slice(0, 1)[0];
+                var ___args = ___args_array.slice(1);
+                var ___constructor = ___clazz;
+
+                function Fake() {
+                    ___constructor.apply(this, ___args);
+                }
+
+                Fake.prototype = ___constructor.prototype;
+                return new Fake();
+            }"""
+
+            normalized_new_js = "".join(normalize(raw_new_js).split("\n"))
+            normalized_new_js = re.sub(r"\s+", " ", normalized_new_js)
+
+            new_assign = ecma_ast.Assign("=", new_idf, ecma_ast.String(normalized_new_js))
+            new_stmt = ecma_ast.ExprStatement(new_assign)
+            body_stmts = [new_stmt] + body_stmts
 
         scope_var_statement = self._create_scope_var_statement()
         self.scope.drop_scope()
-
-        if global_stmt:
-            body_stmts = [global_stmt] + body_stmts
 
         if scope_var_statement:
             body_stmts = [scope_var_statement] + body_stmts
@@ -220,6 +246,9 @@ class TranslateVisitor(ast.NodeVisitor):
         for child in childs:
             if child["name"] == "_global":
                 self.meta_global_object = child["asname"] or child["name"]
+
+            elif child["name"] == "_new":
+                self.meta_global_new = child["asname"] or child["name"]
 
         return None
 
