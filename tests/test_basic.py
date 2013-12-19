@@ -784,3 +784,33 @@ def test_decorator_with_params():
     compiled = compile(input)
     print(compiled)
     assert compiled == norm(expected)
+
+def test_break():
+    input = """
+    while True:
+        break
+    """
+
+    expected = """
+    while (true) {
+        break;
+    }
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
+def test_continue():
+    input = """
+    while True:
+        continue
+    """
+
+    expected = """
+    while (true) {
+        continue;
+    }
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)

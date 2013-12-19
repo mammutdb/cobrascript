@@ -305,6 +305,12 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_arguments(self, node, childs):
         return childs
 
+    def _translate_Break(self, node, childs):
+        return ecma_ast.Break()
+
+    def _translate_Continue(self, node, childs):
+        return ecma_ast.Continue()
+
     def _translate_Name(self, node, childs):
         if node.id == "None":
             return ecma_ast.Null(node.id)
