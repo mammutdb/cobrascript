@@ -224,22 +224,22 @@ Example:
 
 .. code-block:: python
 
-    import _new as new
-    defer = new(SomeClass, "param1", "param2")
+    import _new as new_instance
+    defer = new_instance(SomeClass, "param1", "param2")
 
 And, this is translated to:
 
 .. code-block:: js
 
     (function() {
-        var defer, new;
-        new = function() { //
+        var defer, new_instance;
+        new_instance = function() { //
             // Some special function for call new.
             // (For full function definition, you can see
             //  tests code)
         };
 
-        defer = new(SomeClass, "param1", "param2");
+        defer = new_instance(SomeClass, "param1", "param2");
     }).call(this);
 
 
