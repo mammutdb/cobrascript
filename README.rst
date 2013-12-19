@@ -180,6 +180,69 @@ javascript operators:
 | ``or``      | ``||``     |
 +-------------+------------+
 
+
+Global object
+~~~~~~~~~~~~~
+
+This part is slighty distinct from others, because follows python
+philosofy: "explicit better than implicit".
+
+For expose some variables to global scope, you should import ``_global``
+module (special form module).
+
+Example:
+
+.. code-block:: python
+
+    # example_file.py
+
+    import _global as g
+
+    # g represents a window object
+    g.some_variable = 2
+
+And this is translated to:
+
+.. code-block:: js
+
+    // example_file.js
+    (function()
+        var g;
+        g = this;
+        g.some_variable = 2;
+    }).call(this);
+
+
+New operator
+~~~~~~~~~~~~
+
+Python as is does not suport new operator. For emulate javascript new operator,
+cobrascript exposes other special-form import thar exposes "magic" function
+that emulates a new operator.
+
+Example:
+
+.. code-block:: python
+
+    import _new as new
+    defer = new(SomeClass, "param1", "param2")
+
+And, this is translated to:
+
+.. code-block:: js
+
+    (function() {
+        var defer, new;
+        new = function() { //
+            // Some special function for call new.
+            // (For full function definition, you can see
+            //  tests code)
+        };
+
+        defer = new(SomeClass, "param1", "param2");
+    }).call(this);
+
+
 Full list of implemented features
 ---------------------------------
 
