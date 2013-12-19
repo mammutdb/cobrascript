@@ -410,6 +410,54 @@ def test_exceptions_raise():
     assert compiled == norm(expected)
 
 
+def test_conditional_list_comprehensions():
+    input = """
+    count = [num for num in [1, 2, 3, 4] if num != 4]
+    """
+
+    expected = """
+    var count;
+    count = (function() {
+        var _i, _len, _values, _results;
+        _values = [1,2,3,4];
+        _results = [];
+        for (_i = 0, _len = _values.length; _i < _len; _i++) {
+            if (num !== 4) {
+                _results.push(_values[_i])
+            }
+        }
+        return _results;
+    })();
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
+
+def test_multiple_conditional_list_comprehensions():
+    input = """
+    count = [num for num in [1, 2, 3, 4] if num != 4 if num != 3]
+    """
+
+    expected = """
+    var count;
+    count = (function() {
+        var _i, _len, _values, _results;
+        _values = [1,2,3,4];
+        _results = [];
+        for (_i = 0, _len = _values.length; _i < _len; _i++) {
+            if (num !== 4 && num !== 3) {
+                _results.push(_values[_i])
+            }
+        }
+        return _results;
+    })();
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
+
 def test_exceptions_try_except():
     input = """
     try:
@@ -428,6 +476,7 @@ def test_exceptions_try_except():
     compiled = compile(input)
     print(compiled)
     assert compiled == norm(expected)
+
 
 def test_exceptions_try_finally():
     input = """

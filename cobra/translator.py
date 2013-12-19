@@ -123,6 +123,9 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_Eq(self, node, childs):
         return "==="
 
+    def _translate_NotEq(self, node, childs):
+        return "!=="
+
     def _translate_Lt(self, node, childs):
         return "<"
 
@@ -371,10 +374,7 @@ class TranslateVisitor(ast.NodeVisitor):
         values = generator.iter
         target = generator.target
         expresion = childs
-
-        #if len(node.ifs) > 0:
-        #    raise RuntimeError("If not implemented yet")
-        # ifs = generator.ifs
+        ifs = generator.ifs
 
         counter_idf = ecma_ast.Identifier("_i")
         len_idf = ecma_ast.Identifier("_len")
@@ -408,7 +408,16 @@ class TranslateVisitor(ast.NodeVisitor):
             ecma_ast.ExprStatement(ecma_ast.BracketAccessor(values_idf, counter_idf))
         )
 
-        for_loop_block = ecma_ast.Block([push_on_results])
+        if ifs:
+            composed_condition = None
+            for comprehension_cond in ifs:
+                if composed_condition is None:
+                    composed_condition = self.translate(comprehension_cond)
+                else:
+                    composed_condition = ecma_ast.BinOp("&&", composed_condition, self.translate(comprehension_cond))
+            for_loop_block = ecma_ast.Block([ecma_ast.If(composed_condition, ecma_ast.Block([push_on_results]))])
+        else:
+            for_loop_block = ecma_ast.Block([push_on_results])
 
         for_stmt = ecma_ast.For(init, cond, count, for_loop_block)
 
