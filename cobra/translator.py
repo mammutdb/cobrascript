@@ -90,6 +90,16 @@ class TranslateVisitor(ast.NodeVisitor):
 
     # Specific compile methods
 
+    def _translate_UnaryOp(self, node, childs):
+        if type(node.op) == ast.USub:
+            operator = "-"
+        elif type(node.op) == ast.UAdd:
+            operator = "+"
+        else:
+            raise NotImplementedError(":D")
+
+        return ecma_ast.UnaryOp(operator, childs[0], postfix=False)
+
     def _translate_BinOp(self, node, childs):
         n = ecma_ast.BinOp(childs[1], childs[0], childs[2])
         if not self.bin_op_stack.is_empty():
@@ -358,6 +368,9 @@ class TranslateVisitor(ast.NodeVisitor):
         return ecma_ast.BracketAccessor(node_identifier, expr_identifier)
 
     def _translate_List(self, node, childs):
+        return ecma_ast.Array(childs)
+
+    def _translate_Tuple(self, node, childs):
         return ecma_ast.Array(childs)
 
     def _translate_Dict(self, node, childs):

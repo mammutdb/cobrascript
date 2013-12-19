@@ -62,6 +62,39 @@ def test_logic_nested_expr():
     assert compile("True and (False or True)") == "true && (false || true);"
 
 
+def test_list_expr():
+    input = """
+    [1, 2, 3]
+    """
+    expected = """
+    [1,2,3];
+    """
+    assert compile(input) == norm(expected)
+
+
+def test_tuple_expr():
+    input = """
+    (1, 2, 3)
+    """
+    expected = """
+    [1,2,3];
+    """
+    assert compile(input) == norm(expected)
+
+
+def test_unary_operators():
+    input = """
+    x = +1
+    y = -1
+    """
+    expected = """
+    var x, y;
+    x = +1;
+    y = -1;
+    """
+    assert compile(input) == norm(expected)
+
+
 def test_simple_assignation():
     input = "x = 2"
     expected = """
