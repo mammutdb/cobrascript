@@ -71,12 +71,19 @@ class LeveledStack(object):
 class ScopeStack(object):
     def __init__(self):
         self.data = ChainMap({})
+        self.special_forms = {}
 
     def __contains__(self, key):
         return key in self.data
 
-    def set(self, key, value):
-        self.data[key] = value
+    def set(self, key, value, special_form=False):
+        if not special_form:
+            self.data[key] = value
+        else:
+            self.special_forms[key] = value
+
+        if not self.validate():
+            raise RuntimeError("Special form overwriten")
 
     def is_empty(self):
         return len(self.data) == 0
@@ -95,3 +102,8 @@ class ScopeStack(object):
             merged_stmts = list(self.special_forms.values) + merged_stmts
 
         return sorted(merged_stmts, key=lambda x: x.value)
+
+    def validate(self):
+        normal_scope = set(self.data.keys())
+        special_form_scope = set(self.special_forms.keys())
+        return len(normal_scope.intersection(special_form_scope)) == 0
