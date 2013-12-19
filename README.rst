@@ -180,6 +180,40 @@ javascript operators:
 | ``or``      | ``||``     |
 +-------------+------------+
 
+Full list of implemented features
+---------------------------------
+
+Translation
+~~~~~~~~~~~
+
+- Variable assignation.
+- Multiple variable assignation.
+- Binary and Logical operators.
+- Functions, Lambdas and Nested functions.
+- Dicts and Lists.
+- Function calls.
+- Positional arguments.
+- For and while loops.
+- List comprensions.
+- Try/Except/Finally statements.
+- Explicit global object.
+- Explicit new function for create object.
+
+
+Static Analisys
+~~~~~~~~~~~~~~~
+
+- Lexycal scope handling.
+- Protection for overwrite imported special forms.
+
+Command line
+~~~~~~~~~~~~
+
+- Bare mode: compile module without wrapped closure
+- Join: join multiple files before compile.
+- Auto CamelCase: convert identifieres automatically from
+  snake case to camel case.
+
 Pending to implement
 --------------------
 
