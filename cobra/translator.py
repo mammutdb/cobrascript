@@ -180,7 +180,13 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _translate_FunctionDef(self, node, childs):
         scope_var_statement = self._create_scope_var_statement()
-        body_stmts = childs[1:]
+
+        if node.decorator_list:
+            body_stmts = childs[1:-len(node.decorator_list)]
+            decorators = childs[-len(node.decorator_list):]
+        else:
+            body_stmts = childs[1:]
+            decorators = []
 
         # Add scope var statement only if any var is defined
         if scope_var_statement:
@@ -203,7 +209,23 @@ class TranslateVisitor(ast.NodeVisitor):
         expr_stmt._func_expr = func_expr
         expr_stmt._func_expr._identifier = identifier
 
-        return expr_stmt
+        decoration_statements = []
+        for decorator in decorators:
+            decoration_statements.append(
+                ecma_ast.ExprStatement(
+                    ecma_ast.Assign(
+                        "=",
+                        identifier,
+                        ecma_ast.FunctionCall(decorator, [identifier])
+                    )
+                )
+            )
+        decoration_statements.reverse()
+
+        if decoration_statements:
+            return ecma_ast.SetOfNodes([expr_stmt] + decoration_statements)
+        else:
+            return expr_stmt
 
     def _translate_Lambda(self, node, childs):
         exprs = map(ecma_ast.ExprStatement, childs[1:])

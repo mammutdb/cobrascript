@@ -729,3 +729,58 @@ def test_basic_class():
     compiled = compile(input)
     print(compiled)
     assert compiled == norm(expected)
+
+def test_simple_decorator():
+    input = """
+    @decorator
+    def test(x, y):
+        console.log("test")
+    """
+
+    expected = """
+    var test;
+    test = function(x, y) {
+        console.log("test");
+    };
+    test = decorator(test);
+    """
+    compiled = compile(input)
+    assert compiled == norm(expected)
+
+def test_multiple_decorators():
+    input = """
+    @decorator1
+    @decorator2
+    def test(x, y):
+        console.log("test")
+    """
+
+    expected = """
+    var test;
+    test = function(x, y) {
+        console.log("test");
+    };
+    test = decorator2(test);
+    test = decorator1(test);
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
+
+def test_decorator_with_params():
+    input = """
+    @decorator("test-param")
+    def test(x, y):
+        console.log("test")
+    """
+
+    expected = """
+    var test;
+    test = function(x, y) {
+        console.log("test");
+    };
+    test = decorator("test-param")(test);
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)
