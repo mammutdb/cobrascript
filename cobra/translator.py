@@ -148,7 +148,10 @@ class TranslateVisitor(ast.NodeVisitor):
         return "||"
 
     def _translate_Return(self, node, childs):
-        return ecma_ast.Return(childs[0])
+        if childs:
+            return ecma_ast.Return(childs[0])
+        else:
+            return ecma_ast.Return()
 
     def _create_scope_var_statement(self, root=False):
         scope_identifiers = self.scope.get_scope_identifiers(root=root)
