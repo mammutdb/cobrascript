@@ -54,7 +54,7 @@ def test_basic_op_bitwise_shifts():
     assert compile(input) == norm(expected)
 
 
-def test_basic_op_mod():
+def test_basic_op_pow():
     assert compile("3 ** 2") == "Math.pow(3, 2);"
 
 

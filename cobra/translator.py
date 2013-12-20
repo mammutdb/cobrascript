@@ -91,6 +91,7 @@ class TranslateVisitor(ast.NodeVisitor):
     # Specific compile methods
 
     def _translate_UnaryOp(self, node, childs):
+        operator = ""
         if type(node.op) == ast.USub:
             operator = "-"
         elif type(node.op) == ast.UAdd:
@@ -99,8 +100,6 @@ class TranslateVisitor(ast.NodeVisitor):
             operator = "!"
         elif type(node.op) == ast.Invert:
             operator = "~"
-        else:
-            raise NotImplementedError(":D")
 
         return ecma_ast.UnaryOp(operator, childs[0], postfix=False)
 
@@ -360,14 +359,13 @@ class TranslateVisitor(ast.NodeVisitor):
             fcall = ecma_ast.FunctionCall(childs[0], childs[1:])
             return fcall
 
-        elif isinstance(node.func, ast.Attribute):
+        else:
+            # isinstance(node.func, ast.Attribute):
             dotaccessor = childs[0]
             arguments = list(filter(bool, childs[1:]))
 
             function_call = ecma_ast.FunctionCall(dotaccessor, arguments)
             return function_call
-
-        raise NotImplementedError(":D")
 
     def _translate_Attribute(self, node, childs):
         variable_identifier = childs[0]
@@ -378,6 +376,8 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_AugAssign(self, node, childs):
         target = childs[0]
         assign_decl = None
+
+        # FIXME: should be used issubclass instead of type
         if type(node.op) == ast.Pow or type(node.op) == ast.FloorDiv:
             if type(node.op) == ast.Pow:
                 n = ecma_ast.FunctionCall(
@@ -397,11 +397,7 @@ class TranslateVisitor(ast.NodeVisitor):
                 )
             assign_decl = ecma_ast.Assign("=", target, n)
         else:
-            op = childs[1]
-            value = childs[2]
-
-            if op not in ["+", "-", "*", "/", "%"]:
-                raise NotImplementedError(":D")
+            op, value = childs[1], childs[2]
 
             if isinstance(target, ecma_ast.Identifier):
                 if target.value not in self.scope:
