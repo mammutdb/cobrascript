@@ -1,0 +1,13 @@
+language: python
+python:
+  - "3.3"
+install:
+  - pip install -r requirements.txt --use-mirrors
+script:
+  - py.test -vv tests
+notifications:
+  email:
+    recipients:
+      - niwi@niwi.be
+    on_success: change
+    on_failure: change
