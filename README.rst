@@ -330,6 +330,7 @@ Translation
 - Functions, Lambdas and Nested functions.
 - Dicts and Lists.
 - Function calls.
+- Decorators.
 - Positional arguments.
 - For and while loops.
 - List comprensions.
@@ -352,11 +353,13 @@ Command line
 - Auto CamelCase: convert identifieres automatically from
   snake case to camel case.
 
+
 Pending to implement
 --------------------
 
-- Assignment destructing
-- Classes with hineritance
+- Assignment destructing.
+- Class constructor.
+- Classes with hineritance.
 - Dict comprensions.
 - Variable arguments.
 - Array slicing.
