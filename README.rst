@@ -160,6 +160,66 @@ Javascript:
     }
 
 
+While loop
+~~~~~~~~~~
+
+CobraScript/Python:
+
+.. code-block:: python
+
+    while 2 > a:
+        console.log(1)
+
+Javascript:
+
+.. code-block:: js
+
+    while (2 > a) {
+        console.log(1);
+    }
+
+
+Decorators
+~~~~~~~~~~
+
+CobraScript/Python:
+
+.. code-block:: python
+
+    def debug(func):
+        def _decorator():
+            console.log("call....")
+            return func.apply(null, arguments)
+
+        return _decorator
+
+    @debug
+    def sum(a1, a2, a3):
+        return a1 + a2 + a3
+
+    console.log(sum(1,2,3))
+
+
+Javascript:
+
+.. code-block:: js
+
+    var debug, sum;
+    debug = function(func) {
+        var _decorator;
+        _decorator = function() {
+            console.log("call....");
+            return func.apply(null, arguments);
+        };
+        return _decorator;
+    };
+    sum = function(a1, a2, a3) {
+        return (a1 + a2) + a3;
+    };
+    sum = debug(sum);
+    console.log(sum(1, 2, 3));
+
+
 Operators
 ~~~~~~~~~
 
