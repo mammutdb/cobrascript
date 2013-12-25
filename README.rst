@@ -370,6 +370,7 @@ License
 .. code-block:: text
 
     Copyright (c) 2013 Andrey Antukh <niwi@niwi.be>
+    Copyright (c) 2013 Jesús Espino García <jespinog@gmail.com>
 
     All rights reserved.
 
