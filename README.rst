@@ -3,6 +3,18 @@ CobraScript
 
 Simple experiment of translate basic python ast to javascript.
 
+
+.. image:: https://travis-ci.org/niwibe/cobrascript.png?branch=master
+    :target: https://travis-ci.org/niwibe/cobrascript
+
+.. image:: https://pypip.in/v/cobrascript/badge.png
+    :target: https://crate.io/packages/cobrascript
+
+.. image:: https://pypip.in/d/cobrascript/badge.png
+    :target: https://crate.io/packages/cobrascript
+
+
+
 Install
 -------
 
