@@ -21,8 +21,8 @@ setup(name='cobrascript',
                    'Operating System :: MacOS :: MacOS X',
                    'Topic :: Software Development :: Libraries',
                    'Topic :: Utilities',
-                   'Programming Language :: Python :: 3'
-                   'Programming Language :: Python :: 3.3'],
+                   'Programming Language :: Python :: 3',
+                   'Programming Language :: Python :: 3.3',],
       install_requires=[],
       packages=['cobra'],
       zip_safe=False)
