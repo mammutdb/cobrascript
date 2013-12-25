@@ -1,7 +1,8 @@
 CobraScript
 ===========
 
-Simple experiment of translate basic python ast to javascript.
+Simple experiment of translate basic python ast to javascript with output than can be read by humans
+(it works like coffescript, but with python syntax).
 
 
 .. image:: https://travis-ci.org/niwibe/cobrascript.png?branch=master
@@ -12,7 +13,6 @@ Simple experiment of translate basic python ast to javascript.
 
 .. image:: https://pypip.in/d/cobrascript/badge.png
     :target: https://crate.io/packages/cobrascript
-
 
 
 Install
