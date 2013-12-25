@@ -14,6 +14,8 @@ Simple experiment of translate basic python ast to javascript with output than c
 .. image:: https://pypip.in/d/cobrascript/badge.png
     :target: https://crate.io/packages/cobrascript
 
+**Warning: this package is on alpha stage of development.**
+
 
 Install
 -------
