@@ -5,7 +5,7 @@ from setuptools import setup
 setup(name='cobrascript',
       description='Python syntax translator to Javascript.',
       long_description='Python syntax translator to Javascript.',
-      version='0.1.0',
+      version='0.1.1',
       url='https://github.com/niwibe/cobrascript',
       license='BSD License',
       platforms=['unix', 'linux', 'osx', 'cygwin', 'win32'],
