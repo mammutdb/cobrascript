@@ -916,3 +916,18 @@ def test_negative_slices():
     compiled = compile(input)
     print(compiled)
     assert compiled == norm(expected)
+
+def test_multiple_assignation():
+    # FIXME: this seems generate inconsisten js?
+    input = """
+    x = a, b = 1, 2
+    """
+    expected = """
+    var _ref_0, x;
+    x = _ref_0 = [1,2];
+    a = _ref_0[0];
+    b = _ref_0[1];
+    """
+    compiled = compile(input)
+    print(compiled)
+    assert compiled == norm(expected)

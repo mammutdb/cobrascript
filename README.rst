@@ -194,6 +194,27 @@ Javascript:
     }
 
 
+Multiple assignation
+~~~~~~~~~~~~~~~~~~~~
+
+
+CobraScript/Python:
+
+.. code-block:: python
+
+    a, b = 1, 2
+
+
+Javascript:
+
+.. code-block:: js
+
+    var _ref_0;
+    _ref_0 = [1,2];
+    a = _ref_0[0];
+    b = _ref_0[1];
+
+
 Decorators
 ~~~~~~~~~~
 
@@ -337,6 +358,7 @@ Translation
 - Try/Except/Finally statements.
 - Explicit global object.
 - Explicit new function for create object.
+- Multiple assignation.
 
 
 Static Analisys
@@ -357,7 +379,6 @@ Command line
 Pending to implement
 --------------------
 
-- Assignment destructing.
 - Class constructor.
 - Classes with hineritance.
 - Dict comprensions.
