@@ -364,6 +364,7 @@ def test_assign_dict_with_lists():
 
     assert compile(input) == norm(expected)
 
+
 def test_simple_if_statement():
     input = """
     def foo(a):
@@ -384,6 +385,7 @@ def test_simple_if_statement():
     """
 
     assert compile(input) == norm(expected)
+
 
 def test_simple_if_statement_with_else():
     input = """
@@ -467,6 +469,7 @@ def test_nested_for():
     compiled = compile(input)
     assert compiled == norm(expected)
 
+
 def test_basic_while():
     input = """
     while True:
@@ -498,7 +501,9 @@ def test_nested_while():
     compiled = compile(input)
     assert compiled == norm(expected)
 
+
 def test_while_else():
+    # FIXME: this seems generate inconsisten js?
     input = """
     while my_var:
         console.log("test")
@@ -521,6 +526,7 @@ def test_while_else():
     print(compiled)
     assert compiled == norm(expected)
 
+
 def test_basic_list_comprehensions():
     input = """
     count = [num for num in [1, 2, 3, 4]]
@@ -540,6 +546,7 @@ def test_basic_list_comprehensions():
     """
     compiled = compile(input)
     assert compiled == norm(expected)
+
 
 def test_exceptions_raise():
     input = """
@@ -711,6 +718,7 @@ def test_module_as_closure():
     compiled = compile(input, translate_options={"module_as_closure": True})
     assert compiled == norm(expected)
 
+
 def test_dict_access():
     input = """
     xx = foo["22"]
@@ -722,6 +730,7 @@ def test_dict_access():
     """
     compiled = compile(input)
     assert compiled == norm(expected)
+
 
 def test_empty_return():
     input = """
@@ -750,6 +759,7 @@ def test_this_assignation():
     compiled = compile(input)
     assert compiled == norm(expected)
 
+
 def test_basic_class():
     input = """
     class MyClass:
@@ -774,6 +784,7 @@ def test_basic_class():
     print(compiled)
     assert compiled == norm(expected)
 
+
 def test_simple_decorator():
     input = """
     @decorator
@@ -790,6 +801,7 @@ def test_simple_decorator():
     """
     compiled = compile(input)
     assert compiled == norm(expected)
+
 
 def test_multiple_decorators():
     input = """
@@ -811,6 +823,7 @@ def test_multiple_decorators():
     print(compiled)
     assert compiled == norm(expected)
 
+
 def test_decorator_with_params():
     input = """
     @decorator("test-param")
@@ -829,6 +842,7 @@ def test_decorator_with_params():
     print(compiled)
     assert compiled == norm(expected)
 
+
 def test_break():
     input = """
     while True:
@@ -843,6 +857,7 @@ def test_break():
     compiled = compile(input)
     print(compiled)
     assert compiled == norm(expected)
+
 
 def test_continue():
     input = """
@@ -859,6 +874,7 @@ def test_continue():
     print(compiled)
     assert compiled == norm(expected)
 
+
 def test_simple_slice():
     input = """
     testList[1:5]
@@ -870,6 +886,7 @@ def test_simple_slice():
     compiled = compile(input)
     print(compiled)
     assert compiled == norm(expected)
+
 
 def test_partial_slices():
     input = """
@@ -884,6 +901,7 @@ def test_partial_slices():
     compiled = compile(input)
     print(compiled)
     assert compiled == norm(expected)
+
 
 def test_negative_slices():
     input = """
