@@ -532,10 +532,10 @@ class TranslateVisitor(ast.NodeVisitor):
         expresion = childs
         ifs = generator.ifs
 
-        counter_idf = ecma_ast.Identifier("_i")
-        len_idf = ecma_ast.Identifier("_len")
-        values_idf = ecma_ast.Identifier("_values")
-        results_idf = ecma_ast.Identifier("_results")
+        counter_idf = self.get_unique_identifier("_i")
+        len_idf = self.get_unique_identifier("_len")
+        values_idf = self.get_unique_identifier("_values")
+        results_idf = self.get_unique_identifier("_results")
 
         counter_var_decl = ecma_ast.VarDecl(counter_idf)
         len_var_decl = ecma_ast.VarDecl(len_idf)

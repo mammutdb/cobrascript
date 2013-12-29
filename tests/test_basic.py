@@ -533,18 +533,19 @@ def test_basic_list_comprehensions():
     """
 
     expected = """
-    var count;
+    var _i_0, _len_0, _results_0, _values_0, count;
     count = (function() {
-        var _i, _len, _values, _results;
-        _values = [1,2,3,4];
-        _results = [];
-        for (_i = 0, _len = _values.length; _i < _len; _i++) {
-            _results.push(_values[_i])
+        var _i_0, _len_0, _values_0, _results_0;
+        _values_0 = [1,2,3,4];
+        _results_0 = [];
+        for (_i_0 = 0, _len_0 = _values_0.length; _i_0 < _len_0; _i_0++) {
+            _results_0.push(_values_0[_i_0])
         }
-        return _results;
+        return _results_0;
     })();
     """
     compiled = compile(input)
+    print(compiled)
     assert compiled == norm(expected)
 
 
@@ -567,17 +568,17 @@ def test_conditional_list_comprehensions():
     """
 
     expected = """
-    var count;
+    var _i_0, _len_0, _results_0, _values_0, count;
     count = (function() {
-        var _i, _len, _values, _results;
-        _values = [1,2,3,4];
-        _results = [];
-        for (_i = 0, _len = _values.length; _i < _len; _i++) {
+        var _i_0, _len_0, _values_0, _results_0;
+        _values_0 = [1,2,3,4];
+        _results_0 = [];
+        for (_i_0 = 0, _len_0 = _values_0.length; _i_0 < _len_0; _i_0++) {
             if (num !== 4) {
-                _results.push(_values[_i])
+                _results_0.push(_values_0[_i_0])
             }
         }
-        return _results;
+        return _results_0;
     })();
     """
     compiled = compile(input)
@@ -591,20 +592,21 @@ def test_multiple_conditional_list_comprehensions():
     """
 
     expected = """
-    var count;
+    var _i_0, _len_0, _results_0, _values_0, count;
     count = (function() {
-        var _i, _len, _values, _results;
-        _values = [1,2,3,4];
-        _results = [];
-        for (_i = 0, _len = _values.length; _i < _len; _i++) {
+        var _i_0, _len_0, _values_0, _results_0;
+        _values_0 = [1,2,3,4];
+        _results_0 = [];
+        for (_i_0 = 0, _len_0 = _values_0.length; _i_0 < _len_0; _i_0++) {
             if (num !== 4 && num !== 3) {
-                _results.push(_values[_i])
+                _results_0.push(_values_0[_i_0])
             }
         }
-        return _results;
+        return _results_0;
     })();
     """
     compiled = compile(input)
+    print(compiled)
     assert compiled == norm(expected)
 
 
