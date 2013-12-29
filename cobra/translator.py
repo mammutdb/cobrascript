@@ -105,21 +105,14 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _translate_BinOp(self, node, childs):
         if type(node.op) == ast.Pow:
-            n = ecma_ast.FunctionCall(
-                ecma_ast.DotAccessor(
-                    ecma_ast.Identifier("Math"),
-                    ecma_ast.Identifier("pow")
-                ),
-                [childs[0], childs[1]]
-            )
+            da = ecma_ast.DotAccessor(ecma_ast.Identifier("Math"),
+                                      ecma_ast.Identifier("pow"))
+            n = ecma_ast.FunctionCall(da, [childs[0], childs[1]])
         elif type(node.op) == ast.FloorDiv:
-            n = ecma_ast.FunctionCall(
-                ecma_ast.DotAccessor(
-                    ecma_ast.Identifier("Math"),
-                    ecma_ast.Identifier("floor")
-                ),
-                [ecma_ast.BinOp("/", childs[0], childs[1])]
-            )
+            da = ecma_ast.DotAccessor(ecma_ast.Identifier("Math"),
+                                      ecma_ast.Identifier("floor"))
+            op = ecma_ast.BinOp("/", childs[0], childs[1])
+            n = ecma_ast.FunctionCall(da, [op])
         elif type(node.op) == ast.BitOr:
             n = ecma_ast.BinOp("|", childs[0], childs[1])
         elif type(node.op) == ast.BitAnd:
@@ -198,8 +191,7 @@ class TranslateVisitor(ast.NodeVisitor):
     def _translate_Return(self, node, childs):
         if childs:
             return ecma_ast.Return(childs[0])
-        else:
-            return ecma_ast.Return()
+        return ecma_ast.Return()
 
     def _create_scope_var_statement(self, root=False):
         scope_identifiers = self.scope.get_scope_identifiers(root=root)
@@ -243,21 +235,15 @@ class TranslateVisitor(ast.NodeVisitor):
 
         decoration_statements = []
         for decorator in decorators:
-            decoration_statements.append(
-                ecma_ast.ExprStatement(
-                    ecma_ast.Assign(
-                        "=",
-                        identifier,
-                        ecma_ast.FunctionCall(decorator, [identifier])
-                    )
-                )
-            )
-        decoration_statements.reverse()
+            fcall_expr = ecma_ast.FunctionCall(decorator, [identifier])
+            assign_expr = ecma_ast.Assign("=", identifier, fcall_expr)
+            decoration_statements.append(ecma_ast.ExprStatement(assign_expr))
 
         if decoration_statements:
-            return ecma_ast.SetOfNodes([expr_stmt] + decoration_statements)
-        else:
-            return expr_stmt
+            reversed_decoration_statements = list(reversed(decoration_statements))
+            return ecma_ast.SetOfNodes([expr_stmt] + reversed_decoration_statements)
+
+        return expr_stmt
 
     def _translate_Lambda(self, node, childs):
         exprs = map(ecma_ast.ExprStatement, childs[1:])
@@ -360,7 +346,6 @@ class TranslateVisitor(ast.NodeVisitor):
             return fcall
 
         else:
-            # isinstance(node.func, ast.Attribute):
             dotaccessor = childs[0]
             arguments = list(filter(bool, childs[1:]))
 
@@ -380,21 +365,14 @@ class TranslateVisitor(ast.NodeVisitor):
         # FIXME: should be used issubclass instead of type
         if type(node.op) == ast.Pow or type(node.op) == ast.FloorDiv:
             if type(node.op) == ast.Pow:
-                n = ecma_ast.FunctionCall(
-                    ecma_ast.DotAccessor(
-                        ecma_ast.Identifier("Math"),
-                        ecma_ast.Identifier("pow")
-                    ),
-                    [childs[0], childs[1]]
-                )
+                da = ecma_ast.DotAccessor(ecma_ast.Identifier("Math"),
+                                          ecma_ast.Identifier("pow"))
+                n = ecma_ast.FunctionCall(da, [childs[0], childs[1]])
             elif type(node.op) == ast.FloorDiv:
-                n = ecma_ast.FunctionCall(
-                    ecma_ast.DotAccessor(
-                        ecma_ast.Identifier("Math"),
-                        ecma_ast.Identifier("floor")
-                    ),
-                    [ecma_ast.BinOp("/", childs[0], childs[1])]
-                )
+                op = ecma_ast.BinOp("/", childs[0], childs[1])
+                da = ecma_ast.DotAccessor(ecma_ast.Identifier("Math"),
+                                          ecma_ast.Identifier("floor"))
+                n = ecma_ast.FunctionCall(da, [op])
             assign_decl = ecma_ast.Assign("=", target, n)
         else:
             op, value = childs[1], childs[2]
@@ -430,7 +408,6 @@ class TranslateVisitor(ast.NodeVisitor):
 
 
     def _translate_Index(self, node, childs):
-        # FIXME: seems to be incomplete
         return childs[0]
 
     def _translate_Subscript(self, node, childs):
@@ -449,13 +426,8 @@ class TranslateVisitor(ast.NodeVisitor):
             if hasattr(node.slice, 'upper') and node.slice.upper:
                 slice_values.append(self.translate(node.slice.upper))
 
-            return ecma_ast.FunctionCall(
-                ecma_ast.DotAccessor(
-                    node_identifier,
-                    ecma_ast.Identifier("slice")
-                ),
-                slice_values
-            )
+            da = ecma_ast.DotAccessor(node_identifier, ecma_ast.Identifier("slice"))
+            return ecma_ast.FunctionCall(da, slice_values)
         else:
             expr_identifier = childs[1]
 
@@ -535,17 +507,20 @@ class TranslateVisitor(ast.NodeVisitor):
             else_body = childs[body_blocks_size+1:]
 
         if else_body is None:
-            while_stmt = ecma_ast.While(predicate, ecma_ast.Block(body))
-        else:
-            initialize_condition = ecma_ast.ExprStatement(ecma_ast.Assign("=", else_condition_idf, ecma_ast.Boolean("true")))
-            while_body = ecma_ast.Block([
-                ecma_ast.ExprStatement(ecma_ast.Assign("=", else_condition_idf, ecma_ast.Boolean("false")))
-            ] + body)
-            while_sentence = ecma_ast.While(predicate, while_body)
-            else_sentence = ecma_ast.If(else_condition_idf, ecma_ast.Block(else_body))
-            while_stmt = ecma_ast.SetOfNodes([initialize_condition, while_sentence, else_sentence])
+            return ecma_ast.While(predicate, ecma_ast.Block(body))
 
-        return while_stmt
+        # FIXME: this seems inconsistent :S
+        initialize_assign = ecma_ast.Assign("=", else_condition_idf,
+                                            ecma_ast.Boolean("true"))
+        initialize_condition = ecma_ast.ExprStatement(initialize_assign)
+
+        while_body = ecma_ast.Block([
+            ecma_ast.ExprStatement(ecma_ast.Assign("=", else_condition_idf, ecma_ast.Boolean("false")))
+        ] + body)
+
+        while_sentence = ecma_ast.While(predicate, while_body)
+        else_sentence = ecma_ast.If(else_condition_idf, ecma_ast.Block(else_body))
+        return ecma_ast.SetOfNodes([initialize_condition, while_sentence, else_sentence])
 
     def _translate_ListComp(self, node, childs):
         if len(node.generators) != 1:
@@ -621,11 +596,8 @@ class TranslateVisitor(ast.NodeVisitor):
         iterable = childs[1]
         main_body_expr = childs[2]
 
-        # counter_var_decl = ecma_ast.VarDecl(counter_idf)
-        # counter_var_stmt = ecma_ast.VarStatement(counter_var_decl)
         iterable_var_decl = ecma_ast.VarDecl(iterable_idf, iterable)
         iterable_var_stmt = ecma_ast.VarStatement(iterable_var_decl)
-
 
         # For condition
         cond_right_stmt = ecma_ast.DotAccessor(iterable_idf, ecma_ast.Identifier("length"))
