@@ -765,19 +765,22 @@ def test_this_assignation():
 def test_basic_class():
     input = """
     class MyClass:
-        def foo(self):
-            return 2
+        def __init__(x):
+            this.x = x
+
+        def foo():
+            return this.x
     """
 
     expected = """
     var MyClass, foo;
     MyClass = (function() {
         var classref_0;
-        classref_0 = function() {
-
+        classref_0 = function(x) {
+            this.x = x;
         };
-        classref_0.prototype.foo = function(self) {
-            return 2;
+        classref_0.prototype.foo = function() {
+            return this.x;
         };
         return classref_0;
     })();

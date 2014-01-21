@@ -678,15 +678,26 @@ class TranslateVisitor(ast.NodeVisitor):
 
     def _translate_ClassDef(self, node, childs):
         functions = list(map(lambda x: x._func_expr,
-                            filter(lambda x: hasattr(x, "_func_expr"), childs)))
+                                filter(lambda x: hasattr(x, "_func_expr"), childs)))
         childs = list(filter(lambda x: not hasattr(x, "_func_expr"), childs))
 
-        self.scope.new_scope()
+        # Constructor
 
+        constructor_func_expr = None
+        for fn in functions:
+            if fn._identifier.value == "__init__":
+                constructor_func_expr = fn
+                self.scope.unset("__init__")
+                break
+
+        if constructor_func_expr is None:
+            constructor_func_expr = ecma_ast.FuncExpr(None, None, None)
+        else:
+            functions = list(filter(lambda x: x is not constructor_func_expr, functions))
+
+        self.scope.new_scope()
         inner_class_idf = self.get_unique_identifier("classref")
 
-        # Constructor
-        constructor_func_expr = ecma_ast.FuncExpr(None, None, None)
         assign_expr = ecma_ast.Assign("=", inner_class_idf, constructor_func_expr)
         constructor_expr = ecma_ast.ExprStatement(assign_expr)
 

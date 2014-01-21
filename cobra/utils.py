@@ -85,6 +85,9 @@ class ScopeStack(object):
         if not self.validate():
             raise RuntimeError("Special form overwriten")
 
+    def unset(self, key):
+        del self.data[key]
+
     def is_empty(self):
         return len(self.data) == 0
 
