@@ -379,7 +379,6 @@ Command line
 Pending to implement
 --------------------
 
-- Class constructor.
 - Classes with hineritance.
 - Dict comprensions.
 - Variable arguments.
