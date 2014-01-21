@@ -414,3 +414,9 @@ License
     THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
     THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+.. image:: https://d2weczhvl823v0.cloudfront.net/niwibe/cobrascript/trend.png
+   :alt: Bitdeli badge
+   :target: https://bitdeli.com/free
+
