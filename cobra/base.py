@@ -70,7 +70,7 @@ def main():
     parser.add_argument("-g", "--debug", action="store_true", default=False,
                         help="Activate debug mode (only for developers).")
     parser.add_argument("-w", "--warnings", action="store_true", default=False,
-                        help="Show statick analizer warnings.")
+                        help="Show static analizer warnings.")
     parser.add_argument("-o", "--output", action="store", type=str, metavar="outputfile.js",
                         help="Set output file (by default is stdout).")
     parser.add_argument("-b", "--bare", action="store_true", default=False,

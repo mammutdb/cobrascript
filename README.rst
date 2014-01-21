@@ -44,7 +44,7 @@ Command line
     optional arguments:
       -h, --help            show this help message and exit
       -g, --debug           Activate debug mode (only for developers).
-      -w, --warnings        Show statick analizer warnings.
+      -w, --warnings        Show static analizer warnings.
       -o outputfile.js, --output outputfile.js
                             Set output file (by default is stdout).
       -b, --bare            Compile without a toplevel closure.
@@ -383,7 +383,6 @@ Pending to implement
 - Classes with hineritance.
 - Dict comprensions.
 - Variable arguments.
-- Array slicing.
 
 License
 -------
