@@ -8,10 +8,10 @@ Simple experiment of translate basic python ast to javascript with output than c
 .. image:: https://travis-ci.org/niwibe/cobrascript.png?branch=master
     :target: https://travis-ci.org/niwibe/cobrascript
 
-.. image:: https://pypip.in/v/cobrascript/badge.png
+.. image:: https://img.shields.io/pypi/v/cobrascript.svg
     :target: https://crate.io/packages/cobrascript
 
-.. image:: https://pypip.in/d/cobrascript/badge.png
+.. image:: https://img.shields.io/pypi/dm/cobrascript.svg
     :target: https://crate.io/packages/cobrascript
 
 
